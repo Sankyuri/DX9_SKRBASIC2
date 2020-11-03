@@ -4,7 +4,7 @@ For Japanese only, sorry!
 
 
 # Sample Program
-Sample is here(uploader.jp) ↓ <br>
+Sample is here (uploader.jp): <br>
 https://ux.getuploader.com/kyurimygamesup/download/6
 
 
