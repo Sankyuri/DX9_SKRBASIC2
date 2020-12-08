@@ -1,0 +1,132 @@
+DX9GAME_SKRBASIC v2.x changelog.txt
+
+
+		2020/10/26
+DX9GAME_SKRBASIC v1.x が余りにも使い辛く汚いので、大幅修正開始。
+ついでにオブジェクト指向の命名規則に変更する。
+v1.x との互換性はほぼ無さそう。
+
+Input::is*() 用 enum class を3つ新規追加。
+Sound::Load() を時間とサンプリングレートを渡さないように変更。
+その他、気になる箇所を変更。
+
+
+
+
+		2020/10/28
+Input の関数にコメントを挿入。
+Input の関数の return 地点を削減。
+Input の関数を一部最適化。
+Input に以下の入力判定関数を追加。
+    ・離したときの判定
+        bool Input::isKeyRelease(int id);
+        bool Input::isKeyRelease(KeyboardInput id);
+        bool Input::isJoypadRelease(JoypadInput id);
+    ・何らかの入力をしたかの判定
+        bool Input::isSomeKey();
+        bool Input::isSomeJoypad();
+        bool Input::isSomeMouse();
+        bool Input::isSomeInput();
+    ・マウスを動かしたかの判定
+        bool Input::isCursorMove();
+    ・何を入力したかの判定
+        bool Input::getSomeKey();
+        bool Input::getSomeJoypad();
+        bool Input::getSomeMouse();
+Input に以下のゲッタを追加。
+    ・マウスカーソルの位置を取得
+        POINT       Input::getCursorPos();
+        POINT       Input::getCursorPosPt();
+        D3DXVECTOR2 Input::getCursorPosVec();
+    ・マウスカーソルの移動距離(x, y)を取得
+        POINT       Input::getCursorMoveLength();
+        POINT       Input::getCursorMoveLengthPt();
+        D3DXVECTOR2 Input::getCursorMoveLengthVec();
+    ・ゲームパッドの軸の傾きを取得
+        LONG Input::getJoypadAxisTiltX();
+        LONG Input::getJoypadAxisTiltY();
+        LONG Input::getJoypadAxisTiltZ();
+    ・マウスの軸(？)の傾きを取得
+        LONG Input::getMouseAxisTiltX();
+        LONG Input::getMouseAxisTiltY();
+        LONG Input::getMouseAxisTiltZ();
+        LONG Input::getMouseWheelTilt(); //マウスホイールの回転量
+
+
+
+
+		2020/10/29
+Input のメンバ関数を一部改名。
+    Input::isKey()          -> Input::isKeyInput();
+    Input::isJoypad()       -> Input::isJoypadInput();
+    Input::isMouse()        -> Input::isMouseInput();
+    Input::isMouseInRange() -> Input::isMouseInputInRange();
+Input に以下の関数を追加。
+    Input::isMouseInRange(); // マウスカーソルが特定範囲内にあるか
+Input::isMouse*InRange() の引数2: RECT* を const RECT* に変更。
+
+
+
+
+		2020/10/31
+ImageBase に以下の関数を追加。取り敢えず無回転の場合のみ機能する。
+    ・画像に対するマウス入力
+        bool isMouseHoverOn();   //画像上をホバーしているか
+        bool isMouseInputOn();   //画像をクリックしているか
+        bool isMouseClickOn();   //画像をクリックしたか
+        bool isMouseReleaseOn(); //画像をクリックするのを離したか
+        bool isSomeMouseOn();    //画像上で何らかの入力をしたか
+
+
+
+
+		2020/11/01
+ImageBase のマウス入力関数を回転矩形に対応。
+Input::isJoypadPush(), Input::isJoypadRelease() を修正。
+    軸が入力されているとボタンが機能しなかった。
+    その上、 *Release() は他の軸が入力されていると軸が機能しなかった。
+
+
+
+
+		2020/11/02
+Sound に以下の関数を追加。
+	loadFromResourceFile() …プレーンのリソースファイルから読み込む
+	loadFromMemory()       …メモリに読み込んだ波形データから読み込む
+	※ loadFromMemory() は自分で使わない気がしたのでテストしていない(は？
+	
+ImageSprite/ImagePolygon に以下の関数を追加。
+	loadFromMemory()       …メモリに読み込んだ画像データから読み込む
+	loadFromResourceFile() …プレーンのリソースファイルから読み込む
+	loadFromResource()     …埋め込みリソースから読み込む
+	※ loadFromMemory() と loadFromResource() は自分で使わない気が(ry
+	※ ImagePolygon の方は、既存の load() との一貫性保持の為
+	   load_LoadTex*() をそれぞれ用に追加
+
+
+
+
+		2020/12/08 v2.1
+全てのヘッダの仮引数を a_* の綴りに統一。
+ImagePolygon::trim(4) と ::resize(2) を追加。なお、 ::trim(6) は互換性の為に保持。
+	ImagePolygon::trim(4)   … テクスチャをトリミングする。引数はfloat-uv矩形の4値。
+	ImagePolygon::resize(2) … ポリゴンのサイズを変更する。引数は(x,y)[px]。
+ImageSprite::draw() を少し最適化。
+Sound::loadFromResourceFile() でmmio を閉じ忘れていたのを修正。
+その他プチ修正。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
