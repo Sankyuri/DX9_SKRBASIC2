@@ -1,6 +1,6 @@
 # DX9_SKRBASIC2
 SKRBASIC is Source code and VS2017 project of simple-2D-game Library. <br>
-For Japanese only, sorry!
+Language is Japanese only, sorry!
 
 
 # Sample Program
