@@ -118,6 +118,19 @@ Sound::loadFromResourceFile() でmmio を閉じ忘れていたのを修正。
 
 
 
+		2021/03/09 v2.2
+変数名を命名規則などにより変更。
+	メンバ変数は m_* に変更。
+	グローバル変数は g_* に変更。
+	isCan 系を is-able 系に変更。
+ImagePolygon::trim(...) を変更。
+Sound::loadFromMemory(...) の引数を修正。
+条件式 (true == var) 及び (false == var) を (var) 及び (not var) に変更。
+{ if (...) { return true; } return false; } タイプの関数を { return (...); } に変更。
+その他幾つかの変更。
+
+
+
 
 
 
