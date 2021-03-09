@@ -12,16 +12,16 @@ namespace skrBasic {
 		void  showFPS(int a_x, int a_y, int a_color); //fps数表示
 
 	private:
-		skrBasic::FontSimple FPSFont; //FPS表示用フォント
-		bool  wasInitFPSFont; //FPS表示用フォントの初期化をやったか
-		TCHAR fpsFontBuf[16]; //FPS表示用
-		DWORD preTime;        //計測開始時間
-		DWORD nowTime;        //現在の時間
-		int   timecnt;        //経過時間
-		int   framecnt;       //フレーム数
-		float prefps;         //前回のFPS
+		skrBasic::FontSimple m_fpsFont; //FPS表示用フォント
+		bool  m_wasInitFPSFont; //FPS表示用フォントの初期化をやったか
+		TCHAR m_fpsFontBuf[16]; //FPS表示用
+		DWORD m_preTime;        //計測開始時間
+		DWORD m_nowTime;        //現在の時間
+		int   m_timecnt;        //経過時間
+		int   m_framecnt;       //フレーム数
+		float m_prefps;         //前回のFPS
 
-		void  showFPS_InitFont(); //FPS表示用フォント初期化
+		void  showFPSInitFont(); //FPS表示用フォント初期化
 
 	};
 

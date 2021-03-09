@@ -7,19 +7,21 @@
 
 using namespace skrBasic;
 
-bool skipProcesses = false; //フォーカスが無い場合に処理をしない用
-bool isGameEnd     = false; //ゲームを終了させるか
-bool isSlowMode    = false; //スローモードか
-int  slowAmount    = 3;     //スローモードの速度
-MSG  msg; //メッセージハンドル
+bool g_skipProcesses = false; //フォーカスが無い場合に処理をしない用
+
+static bool g_isGameEnd  = false; //ゲームを終了させるか
+static bool g_isSlowMode = false; //スローモードか
+static int  g_slowAmount = 3;     //スローモードの速度
 
 
 
 static void drawStartupBG();
 
 int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, INT) {
+	MSG msg; //メッセージハンドル
 
-	// メモリリーク検出
+
+	// メモリリーク検出の設定
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
 	//msgをゼロクリア
@@ -46,7 +48,7 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, INT) {
 		Message(_T("画面解像度が足りません。\nゲームを終了します"), _T("悪しからず……"));
 		ShowCursor(true);
 		Release();
-		UnregisterClass(g_ClassName, wc.hInstance);
+		UnregisterClass(g_className, wc.hInstance);
 		return -1;
 	}
 
@@ -54,10 +56,10 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, INT) {
 	game.createWindowSimple(SystemParam::getWindowTitle().c_str(), wndWidth, wndHeight, &wc);
 
 	//D3Dの初期化
-	if (SUCCEEDED(game.initD3D(hWnd))) {
+	if (SUCCEEDED(game.initD3D(g_hWnd))) {
 		//ウィンドウを表示
-		ShowWindow(hWnd, SW_SHOWDEFAULT);
-		UpdateWindow(hWnd);
+		ShowWindow(g_hWnd, SW_SHOWDEFAULT);
+		UpdateWindow(g_hWnd);
 
 		//起動ロードの背景描画
 		drawStartupBG();
@@ -92,7 +94,7 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, INT) {
 			*/
 
 			//ゲームを終了するか
-			if (isGameEnd) {
+			if (g_isGameEnd) {
 				break;
 			}
 
@@ -115,10 +117,10 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, INT) {
 //			}
 
 			//スローモードの時は一定間隔で処理
-			if (true == isSlowMode) {
-				if (0 != (game.getGCount() % slowAmount)) {
+			if (g_isSlowMode) {
+				if (0 != (game.getGCount() % g_slowAmount)) {
 					game.addGCount();
-					Sleep(slowAmount);
+					Sleep(g_slowAmount);
 					continue;
 				}
 			}
@@ -132,7 +134,7 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, INT) {
 //				//デバイスの入力状態の取得
 //				Input::getInputDeviceState();
 				//ウィンドウがアクティブの時にデバイスの入力状態の取得
-				if (false == skipProcesses) {
+				if (not g_skipProcesses) {
 					Input::getInputDeviceState();
 				}
 
@@ -156,7 +158,7 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, INT) {
 	//終了処理
 	ShowCursor(true);
 	Release();
-	UnregisterClass(g_ClassName, wc.hInstance);
+	UnregisterClass(g_className, wc.hInstance);
 	return 0;
 }
 
@@ -185,18 +187,18 @@ static void drawStartupBG() {
 
 //ゲーム終了
 void GameMain::gameEnd() {
-	isGameEnd = true;
+	g_isGameEnd = true;
 }
 
 
 //スローモード切り替え
 void SlowMode(bool mode) {
-	isSlowMode = mode;
+	g_isSlowMode = mode;
 }
 
 //スローモード速度設定
 void SlowModeSpeed(int amount) {
-	slowAmount = 1 < amount ? amount : 2;
+	g_slowAmount = 1 < amount ? amount : 2;
 }
 
 

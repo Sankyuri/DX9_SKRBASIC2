@@ -19,7 +19,7 @@ namespace skrBasic {
 
 		//ウィンドウのタイトルを取得
 		//@return ウィンドウのタイトル
-		static std::_tstring getWindowTitle();
+		static stdex::_tstring getWindowTitle();
 
 		//DSound のプライマリバッファのサンプリングレートを取得
 		//@return DSound のプライマリバッファのサンプリングレート
@@ -40,7 +40,7 @@ namespace skrBasic {
 		//ウィンドウ(vp)の縦幅
 		static const int WINDOW_HEIGHT;
 		//ウィンドウのタイトル
-		static const std::_tstring GAME_TITLE;
+		static const stdex::_tstring GAME_TITLE;
 		//DSound のPバッファのサンプリングレート
 		static const DWORD DSOUND_SAMPLINGRATE;
 		//ウィンドウのクリア色

@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include "header\SystemParam.h"
 #include "header\Basic.h"
-#include "header\SystemParam.h"
 #include "header\D3DBasicProcess.h"
 #include "header\Input.h"
 #include "header\ImagePolygon.h"

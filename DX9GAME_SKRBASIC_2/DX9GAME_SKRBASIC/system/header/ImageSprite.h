@@ -133,12 +133,13 @@ namespace skrBasic {
 
 
 		ImageSprite();
-		~ImageSprite();
+		virtual ~ImageSprite();
 
 	private:
-		LPD3DXSPRITE        ppSprite;  //スプライト
-		D3DXMATRIX          mtrx_temp, mtrx; //途中計算用行列、最終的な変換行列
-		void                matrixFinally();  //行列最終処理
+		LPD3DXSPRITE m_ppSprite;  //スプライト
+		D3DXMATRIX   m_mtrxTemp, m_mtrx; //途中計算用行列、最終的な変換行列
+
+		void         matrixFinally();  //行列最終処理
 
 	};
 

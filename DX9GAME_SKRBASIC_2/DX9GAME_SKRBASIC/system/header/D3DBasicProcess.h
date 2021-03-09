@@ -31,15 +31,15 @@ namespace skrBasic{
 
 
 	private:
-		ULONGLONG gCount = 0;    //グローバルカウンタ
+		ULONGLONG m_gCount = 0;    //グローバルカウンタ
 
-		D3DVIEWPORT9        vp_wnd;         //ウィンドウのビューポート
-		LPDIRECT3DSURFACE9  rt_wnd, zb_wnd; //ウィンドウのレンダリングターゲット情報 / ウィンドウのZバッファ情報
+		D3DVIEWPORT9        m_wndVp;         //ウィンドウのビューポート
+		LPDIRECT3DSURFACE9  m_wndRt, m_wndZb; //ウィンドウのレンダリングターゲット情報 / ウィンドウのZバッファ情報
 
 		void    enableAlphaBlend();     //アルファブレンドを有効にする
 		void    getWindowRenderState(); //ウィンドウのターゲット情報を取得
 
-		HRESULT D3DBP_SetRenderTarget();   //レンダリングターゲットを変更
+		HRESULT D3DBPSetRenderTarget();   //レンダリングターゲットを変更
 
 	};
 

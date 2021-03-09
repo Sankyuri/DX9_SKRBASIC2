@@ -2,21 +2,23 @@
 #include "..\header\Basic.h"
 #include "..\header\systemExtern.h"
 
-static BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE *a_pdidInstance, VOID *a_pContext);
-static BOOL CALLBACK EnumAxesCallback(const DIDEVICEOBJECTINSTANCE *a_pdidoi, VOID *a_pContext);
 
 using namespace skrBasic;
 
-BYTE          Input::keystate[256];
-DIJOYSTATE    Input::joystate;
-DIMOUSESTATE2 Input::mousestate;
-bool          Input::wasKeyIn[256];
-bool          Input::wasJoyIn[36];
-bool          Input::wasClick[8];
-POINT         Input::mousePt;
-POINT         Input::preMousePt;
-bool          Input::useJoypad;
-bool          Input::useMouse;
+BYTE          Input::m_keystate[256];
+DIJOYSTATE    Input::m_joystate;
+DIMOUSESTATE2 Input::m_mousestate;
+bool          Input::m_wasKeyIn[256];
+bool          Input::m_wasJoyIn[36];
+bool          Input::m_wasClick[8];
+POINT         Input::m_mousePt;
+POINT         Input::m_preMousePt;
+bool          Input::m_useJoypad;
+bool          Input::m_useMouse;
+
+
+static BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE *a_pdidInstance, VOID *a_pContext);
+static BOOL CALLBACK EnumAxesCallback(const DIDEVICEOBJECTINSTANCE *a_pdidoi, VOID *a_pContext);
 
 
 HRESULT Input::init() {
@@ -27,25 +29,25 @@ HRESULT Input::init() {
 		exit(-1);
 	}
 	else {
-		ZeroMemory(wasKeyIn, sizeof(wasKeyIn));
+		ZeroMemory(m_wasKeyIn, sizeof(m_wasKeyIn));
 		g_lpKeyboard->Acquire();
 	}
 	if (initJoypad() == E_FAIL) {
-		useJoypad = false;
+		m_useJoypad = false;
 		_tprintf(_T("使えるゲームパッドが無いようです。残念"));
 	}
 	else {
-		useJoypad = true;
-		ZeroMemory(wasJoyIn, sizeof(wasJoyIn));
+		m_useJoypad = true;
+		ZeroMemory(m_wasJoyIn, sizeof(m_wasJoyIn));
 		g_lpJoypad->Acquire();
 	}
 	if (initMouse() == E_FAIL) {
-		useMouse = false;
+		m_useMouse = false;
 		_tprintf(_T("使えるマウスが無いようです。残念"));
 	}
 	else {
-		useMouse = true;
-		ZeroMemory(wasClick, sizeof(wasClick));
+		m_useMouse = true;
+		ZeroMemory(m_wasClick, sizeof(m_wasClick));
 		g_lpMouse->Acquire();
 	}
 	return S_OK;
@@ -67,7 +69,7 @@ HRESULT Input::initKeyboard() {
 				NULL))) {
 			if (SUCCEEDED(g_lpKeyboard->SetDataFormat(&c_dfDIKeyboard))) { //入力データ形式設定
 				if (SUCCEEDED(g_lpKeyboard->SetCooperativeLevel( //排他制御の設定
-						hWnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY))) {
+						g_hWnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY))) {
 					return S_OK;
 				}
 			}
@@ -89,9 +91,9 @@ HRESULT Input::initJoypad() {
 			NULL, DIEDFL_ALLDEVICES))) {
 			if (NULL != g_lpJoypad && SUCCEEDED(hr = g_lpJoypad->SetDataFormat(&c_dfDIJoystick))) { //入力データ形式設定
 				if (SUCCEEDED(g_lpJoypad->SetCooperativeLevel( //排他制御の設定
-					hWnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY))) {
+					g_hWnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY))) {
 					hr = g_lpJoypad->GetCapabilities(&g_diJoyCaps);
-					hr = g_lpJoypad->EnumObjects(EnumAxesCallback, (VOID*)hWnd, DIDFT_AXIS);
+					hr = g_lpJoypad->EnumObjects(EnumAxesCallback, (VOID*)g_hWnd, DIDFT_AXIS);
 					return S_OK;
 				}
 			}
@@ -141,7 +143,7 @@ HRESULT Input::initMouse() {
 			NULL))) {
 			if (SUCCEEDED(hr = g_lpMouse->SetDataFormat(&c_dfDIMouse))) { //入力データ形式設定
 				if (SUCCEEDED(g_lpMouse->SetCooperativeLevel( //排他制御の設定
-					hWnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY))) {
+					g_hWnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY))) {
 					return S_OK;
 				}
 			}
@@ -160,7 +162,7 @@ void Input::getInputDeviceState() {
 }
 
 void Input::getKeyState() {
-	while (FAILED(g_lpKeyboard->GetDeviceState(sizeof(keystate), keystate))){
+	while (FAILED(g_lpKeyboard->GetDeviceState(sizeof(m_keystate), m_keystate))){
 		g_lpKeyboard->Acquire();
 	}
 //	if (FAILED(g_lpKeyboard->GetDeviceState(sizeof(keystate), keystate))) {
@@ -175,29 +177,29 @@ void Input::getKeyState() {
 }
 
 void Input::getJoyState() {
-	if (useJoypad == true) {
+	if (m_useJoypad) {
 		g_lpJoypad->Poll();
-		if (FAILED(g_lpJoypad->GetDeviceState(sizeof(DIJOYSTATE), &joystate))) {
+		if (FAILED(g_lpJoypad->GetDeviceState(sizeof(DIJOYSTATE), &m_joystate))) {
 			g_lpJoypad->Acquire();
 			g_lpJoypad->Poll();
-			if (FAILED(g_lpJoypad->GetDeviceState(sizeof(DIJOYSTATE), &joystate))) {
-				useJoypad = false;
+			if (FAILED(g_lpJoypad->GetDeviceState(sizeof(DIJOYSTATE), &m_joystate))) {
+				m_useJoypad = false;
 			}
 		}
 	}
 }
 
 void Input::getMouseState() {
-	if (useMouse == true) {
-		preMousePt = mousePt; //前回の座標を更新
-		GetCursorPos(&mousePt); //ウィンドウ座標を取得
-		ScreenToClient(hWnd, &mousePt); //ビューポート座標に変換
+	if (m_useMouse) {
+		m_preMousePt = m_mousePt; //前回の座標を更新
+		GetCursorPos(&m_mousePt); //ウィンドウ座標を取得
+		ScreenToClient(g_hWnd, &m_mousePt); //ビューポート座標に変換
 		g_lpMouse->Poll();
-		if (FAILED(g_lpMouse->GetDeviceState(sizeof(DIMOUSESTATE), &mousestate))) {
+		if (FAILED(g_lpMouse->GetDeviceState(sizeof(DIMOUSESTATE), &m_mousestate))) {
 			g_lpMouse->Acquire();
 			g_lpMouse->Poll();
-			if (FAILED(g_lpMouse->GetDeviceState(sizeof(DIMOUSESTATE), &mousestate))) {
-				useMouse = false;
+			if (FAILED(g_lpMouse->GetDeviceState(sizeof(DIMOUSESTATE), &m_mousestate))) {
+				m_useMouse = false;
 			}
 		}
 	}
@@ -207,7 +209,7 @@ void Input::getMouseState() {
 
 
 bool Input::isKeyInput(int a_key) {
-	return (keystate[a_key] & BUTTON_ON_FLUG);
+	return (m_keystate[a_key] & BUTTON_ON_FLUG);
 }
 
 bool Input::isKeyInput(KeyboardInput a_key) {
@@ -215,13 +217,13 @@ bool Input::isKeyInput(KeyboardInput a_key) {
 }
 
 bool Input::isKeyPush(int a_key) {
-	if (keystate[a_key] & BUTTON_ON_FLUG) {
-		if (false == wasKeyIn[a_key]) {
-			return (wasKeyIn[a_key] = true);
+	if (m_keystate[a_key] & BUTTON_ON_FLUG) {
+		if (not m_wasKeyIn[a_key]) {
+			return (m_wasKeyIn[a_key] = true);
 		}
 	}
 	else {
-		return (wasKeyIn[a_key] = false);
+		return (m_wasKeyIn[a_key] = false);
 	}
 	return false;
 }
@@ -231,14 +233,14 @@ bool Input::isKeyPush(KeyboardInput a_key) {
 }
 
 bool Input::isKeyRelease(int a_key) {
-	if (keystate[a_key] & BUTTON_ON_FLUG) {
-		if (false == wasKeyIn[a_key]) {
-			wasKeyIn[a_key] = true;
+	if (m_keystate[a_key] & BUTTON_ON_FLUG) {
+		if (not m_wasKeyIn[a_key]) {
+			m_wasKeyIn[a_key] = true;
 		}
 	}
 	else {
-		if (wasKeyIn[a_key]) {
-			wasKeyIn[a_key] = false;
+		if (m_wasKeyIn[a_key]) {
+			m_wasKeyIn[a_key] = false;
 			return true;
 		}
 	}
@@ -251,30 +253,30 @@ bool Input::isKeyRelease(KeyboardInput a_key) {
 
 
 bool Input::isJoypadInput(JoypadInput a_button) {
-	if (true == useJoypad) {
+	if (m_useJoypad) {
 		switch (a_button) {
 		case JoypadInput::UP:
-			if (joystate.lY <= -PAD_POS_MIN) {
+			if (m_joystate.lY <= -PAD_POS_MIN) {
 				return true;
 			}
 			break;
 		case JoypadInput::DOWN:
-			if (PAD_POS_MIN <= joystate.lY) {
+			if (PAD_POS_MIN <= m_joystate.lY) {
 				return true;
 			}
 			break;
 		case JoypadInput::LEFT:
-			if (joystate.lX <= -PAD_POS_MIN) {
+			if (m_joystate.lX <= -PAD_POS_MIN) {
 				return true;
 			}
 			break;
 		case JoypadInput::RIGHT:
-			if (PAD_POS_MIN <= joystate.lX) {
+			if (PAD_POS_MIN <= m_joystate.lX) {
 				return true;
 			}
 			break;
 		default: //ボタン
-			if (joystate.rgbButtons[static_cast<UINT>(a_button)] & BUTTON_ON_FLUG) {
+			if (m_joystate.rgbButtons[static_cast<UINT>(a_button)] & BUTTON_ON_FLUG) {
 				return true;
 			}
 			break;
@@ -286,49 +288,49 @@ bool Input::isJoypadInput(JoypadInput a_button) {
 bool Input::isJoypadPush(JoypadInput a_button) {
 	UINT button = static_cast<UINT>(a_button);
 	static auto changeJoyIn = [](UINT button) {
-		wasJoyIn[button] = true;
+		m_wasJoyIn[button] = true;
 		return true;
 	};
 
-	if (true == useJoypad) {
+	if (m_useJoypad) {
 		//方向キー
 		if (static_cast<int>(JoypadInput::BUTTON32) < button) {
 			//入力している
-			if (joystate.rgbButtons[button] & BUTTON_ON_FLUG) {
-				if (false == wasJoyIn[button]) {
+			if (m_joystate.rgbButtons[button] & BUTTON_ON_FLUG) {
+				if (not m_wasJoyIn[button]) {
 					return changeJoyIn(button);
 				}
 			}
 			//入力していない
 			else {
-				wasJoyIn[button] = false;
+				m_wasJoyIn[button] = false;
 			}
 		}
 		//ボタン
 		else {
-			if (abs(joystate.lX) > PAD_POS_MIN ||
-				abs(joystate.lY) > PAD_POS_MIN)
+			if (abs(m_joystate.lX) > PAD_POS_MIN ||
+				abs(m_joystate.lY) > PAD_POS_MIN)
 			{
-				if (false == wasJoyIn[button]) {
+				if (not m_wasJoyIn[button]) {
 					//入力している
 					switch (a_button) {
 					case JoypadInput::UP:
-						if (joystate.lY < 0L) { return changeJoyIn(button); }
+						if (m_joystate.lY < 0L) { return changeJoyIn(button); }
 						break;
 					case JoypadInput::DOWN:
-						if (0L < joystate.lY) { return changeJoyIn(button); }
+						if (0L < m_joystate.lY) { return changeJoyIn(button); }
 						break;
 					case JoypadInput::LEFT:
-						if (joystate.lX < 0L) { return changeJoyIn(button); }
+						if (m_joystate.lX < 0L) { return changeJoyIn(button); }
 						break;
 					case JoypadInput::RIGHT:
-						if (0L < joystate.lX) { return changeJoyIn(button); }
+						if (0L < m_joystate.lX) { return changeJoyIn(button); }
 						break;
 					}
-				} // if (false == wasJoyIn[button])
+				} // if (not wasJoyIn[button])
 			} // if (abs(joystate.lX) > PAD_POS_MIN || ... )
 			else { //入力していない
-				wasJoyIn[button] = false;
+				m_wasJoyIn[button] = false;
 			}
 		} // if (button < static_cast<int>(JoypadInput::UP)) { ... } else
 	}
@@ -338,35 +340,35 @@ bool Input::isJoypadPush(JoypadInput a_button) {
 bool Input::isJoypadRelease(JoypadInput a_button) {
 	UINT button = static_cast<UINT>(a_button);
 	static auto changeJoyIn = [](UINT button) {
-		if (true == wasJoyIn[button]) {
+		if (m_wasJoyIn[button]) {
 			// 直前まで入力していた
-			wasJoyIn[button] = false;
+			m_wasJoyIn[button] = false;
 			return true;
 		}
 		return false;
 	};
-	if (true == useJoypad) {
+	if (m_useJoypad) {
 		switch (a_button) {
 		case JoypadInput::UP:
 			//入力している
-			if (joystate.lY < 0L) { wasJoyIn[button] = true; }
+			if (m_joystate.lY < 0L) { m_wasJoyIn[button] = true; }
 			//入力していない
 			else { return changeJoyIn(button); }
 			break;
 		case JoypadInput::DOWN:
-			if (0L < joystate.lY) { wasJoyIn[button] = true; }
+			if (0L < m_joystate.lY) { m_wasJoyIn[button] = true; }
 			else { return changeJoyIn(button); }
 			break;
 		case JoypadInput::LEFT:
-			if (joystate.lX < 0L) { wasJoyIn[button] = true; }
+			if (m_joystate.lX < 0L) { m_wasJoyIn[button] = true; }
 			else { return changeJoyIn(button); }
 			break;
 		case JoypadInput::RIGHT:
-			if (0L < joystate.lX) { wasJoyIn[button] = true; }
+			if (0L < m_joystate.lX) { m_wasJoyIn[button] = true; }
 			else { return changeJoyIn(button); }
 			break;
 		default: //ボタン
-			if (joystate.rgbButtons[button] & BUTTON_ON_FLUG) { wasJoyIn[button] = true; }
+			if (m_joystate.rgbButtons[button] & BUTTON_ON_FLUG) { m_wasJoyIn[button] = true; }
 			else { return changeJoyIn(button); }
 			break;
 		}
@@ -376,22 +378,19 @@ bool Input::isJoypadRelease(JoypadInput a_button) {
 
 
 bool Input::isMouseInput(MouseInput a_mousebutton) {
-	if (mousestate.rgbButtons[static_cast<UINT>(a_mousebutton)] & BUTTON_ON_FLUG) {
-		return true;
-	}
-	return false;
+	return (m_mousestate.rgbButtons[static_cast<UINT>(a_mousebutton)] & BUTTON_ON_FLUG);
 }
 
 bool Input::isMouseClick(MouseInput a_mousebutton) {
 	UINT mousebutton = static_cast<UINT>(a_mousebutton);
-	if (mousestate.rgbButtons[mousebutton] & BUTTON_ON_FLUG) {
-		if (false == wasClick[mousebutton]) {
-			wasClick[mousebutton] = true;
+	if (m_mousestate.rgbButtons[mousebutton] & BUTTON_ON_FLUG) {
+		if (not m_wasClick[mousebutton]) {
+			m_wasClick[mousebutton] = true;
 			return true;
 		}
 	}
 	else { // 入力していない
-		wasClick[mousebutton] = false;
+		m_wasClick[mousebutton] = false;
 		return false;
 	}
 	return false;
@@ -399,14 +398,14 @@ bool Input::isMouseClick(MouseInput a_mousebutton) {
 
 bool Input::isMouseRelease(MouseInput a_mousebutton) {
 	UINT mousebutton = static_cast<UINT>(a_mousebutton);
-	if (mousestate.rgbButtons[mousebutton] & BUTTON_ON_FLUG) {
-		if (false == wasClick[mousebutton]) {
-			wasClick[mousebutton] = true;
+	if (m_mousestate.rgbButtons[mousebutton] & BUTTON_ON_FLUG) {
+		if (not m_wasClick[mousebutton]) {
+			m_wasClick[mousebutton] = true;
 		}
 	}
 	else { // 入力していない
-		if (true == wasClick[mousebutton]) { // 直前まで入力していた
-			wasClick[mousebutton] = false;
+		if (m_wasClick[mousebutton]) { // 直前まで入力していた
+			m_wasClick[mousebutton] = false;
 			return true;
 		}
 	}
@@ -414,44 +413,40 @@ bool Input::isMouseRelease(MouseInput a_mousebutton) {
 }
 
 bool Input::isMouseInputInRange(MouseInput a_mousebutton, const RECT *a_area) {
-	if ((mousestate.rgbButtons[static_cast<UINT>(a_mousebutton)] & BUTTON_ON_FLUG) &&
-		a_area->left <= mousePt.x && a_area->right  > mousePt.x &&
-		a_area->top  <= mousePt.y && a_area->bottom > mousePt.y)
-	{
-		return true;
-	}
-	return false;
+	return ((m_mousestate.rgbButtons[static_cast<UINT>(a_mousebutton)] & BUTTON_ON_FLUG) &&
+			a_area->left <= m_mousePt.x && a_area->right  > m_mousePt.x                  &&
+			a_area->top  <= m_mousePt.y && a_area->bottom > m_mousePt.y);
 }
 
 bool Input::isMouseClickInRange(MouseInput a_mousebutton, const RECT *a_area) {
 	UINT mousebutton = static_cast<UINT>(a_mousebutton);
-	if (mousestate.rgbButtons[mousebutton] & BUTTON_ON_FLUG &&
-		a_area->left <= mousePt.x && a_area->right  > mousePt.x &&
-		a_area->top  <= mousePt.y && a_area->bottom > mousePt.y)
+	if (m_mousestate.rgbButtons[mousebutton] & BUTTON_ON_FLUG &&
+		a_area->left <= m_mousePt.x && a_area->right  > m_mousePt.x &&
+		a_area->top  <= m_mousePt.y && a_area->bottom > m_mousePt.y)
 	{
-		if (false == wasClick[mousebutton]) {
-			wasClick[mousebutton] = true;
+		if (not m_wasClick[mousebutton]) {
+			m_wasClick[mousebutton] = true;
 			return true;
 		}
 	}
 	else { // 入力していないか範囲外
-		wasClick[mousebutton] = false;
+		m_wasClick[mousebutton] = false;
 	}
 	return false;
 }
 
 bool Input::isMouseReleaseInRange(MouseInput a_mousebutton, const RECT *a_area) {
 	UINT mousebutton = static_cast<UINT>(a_mousebutton);
-	if (mousestate.rgbButtons[mousebutton] & BUTTON_ON_FLUG &&
-		a_area->left <= mousePt.x && a_area->right  > mousePt.x &&
-		a_area->top  <= mousePt.y && a_area->bottom > mousePt.y)
+	if (m_mousestate.rgbButtons[mousebutton] & BUTTON_ON_FLUG &&
+		a_area->left <= m_mousePt.x && a_area->right  > m_mousePt.x &&
+		a_area->top  <= m_mousePt.y && a_area->bottom > m_mousePt.y)
 	{
-		if (false == wasClick[mousebutton]) {
-			wasClick[mousebutton] = true;
+		if (not m_wasClick[mousebutton]) {
+			m_wasClick[mousebutton] = true;
 		}
 	}
 	else { // 入力していないか範囲外
-		wasClick[mousebutton] = false;
+		m_wasClick[mousebutton] = false;
 		return true;
 	}
 	return false;
@@ -459,27 +454,19 @@ bool Input::isMouseReleaseInRange(MouseInput a_mousebutton, const RECT *a_area) 
 
 
 bool Input::isMouseInRange(const RECT *a_area) {
-	if (a_area->left <= mousePt.x && a_area->right  > mousePt.x &&
-		a_area->top  <= mousePt.y && a_area->bottom > mousePt.y)
-	{
-		return true;
-	}
-	return false;
+	return (a_area->left <= m_mousePt.x && a_area->right  > m_mousePt.x &&
+			a_area->top  <= m_mousePt.y && a_area->bottom > m_mousePt.y);
 }
 
 
 bool Input::isCursorMove() {
-	if (mousePt.x != preMousePt.x ||
-		mousePt.y != preMousePt.y)
-	{
-		return true;
-	}
-	return false;
+	return (m_mousePt.x != m_preMousePt.x ||
+			m_mousePt.y != m_preMousePt.y);
 }
 
 
 POINT Input::getCursorPos() {
-	return mousePt;
+	return m_mousePt;
 }
 
 POINT Input::getCursorPosPt() {
@@ -487,14 +474,14 @@ POINT Input::getCursorPosPt() {
 }
 
 D3DXVECTOR2 Input::getCursorPosVec() {
-	return D3DXVECTOR2(mousePt.x, mousePt.y);
+	return D3DXVECTOR2(m_mousePt.x, m_mousePt.y);
 }
 
 
 POINT Input::getCursorMoveLength() {
 	POINT res;
-	res.x = preMousePt.x - mousePt.x;
-	res.y = preMousePt.y - mousePt.y;
+	res.x = m_preMousePt.x - m_mousePt.x;
+	res.y = m_preMousePt.y - m_mousePt.y;
 	return res;
 }
 
@@ -503,43 +490,43 @@ POINT Input::getCursorMoveLengthPt() {
 }
 
 D3DXVECTOR2 Input::getCursorMoveLengthVec() {
-	return D3DXVECTOR2(preMousePt.x - mousePt.x, preMousePt.y - mousePt.y);
+	return D3DXVECTOR2(m_preMousePt.x - m_mousePt.x, m_preMousePt.y - m_mousePt.y);
 }
 
 
 LONG Input::getJoypadAxisTiltX() {
-	return joystate.lX;
+	return m_joystate.lX;
 }
 
 LONG Input::getJoypadAxisTiltY() {
-	return joystate.lY;
+	return m_joystate.lY;
 }
 
 LONG Input::getJoypadAxisTiltZ() {
-	return joystate.lZ;
+	return m_joystate.lZ;
 }
 
 
 LONG Input::getMouseAxisTiltX() {
-	return mousestate.lX;
+	return m_mousestate.lX;
 }
 
 LONG Input::getMouseAxisTiltY() {
-	return mousestate.lY;
+	return m_mousestate.lY;
 }
 
 LONG Input::getMouseAxisTiltZ() {
-	return mousestate.lZ;
+	return m_mousestate.lZ;
 }
 
 LONG Input::getMouseWheelTilt() {
-	return mousestate.lZ;
+	return m_mousestate.lZ;
 }
 
 
 bool Input::isSomeKey() {
 	for (int i = 0; i < KEY_ARY_MAX; ++i) {
-		if (keystate[i] & BUTTON_ON_FLUG) {
+		if (m_keystate[i] & BUTTON_ON_FLUG) {
 			return true;
 		}
 	}
@@ -548,12 +535,12 @@ bool Input::isSomeKey() {
 
 bool Input::isSomeJoypad() {
 	for (int i = 0; i < PAD_BTN_MAX; ++i) {
-		if (joystate.rgbButtons[i] & BUTTON_ON_FLUG) {
+		if (m_joystate.rgbButtons[i] & BUTTON_ON_FLUG) {
 			return true;
 		}
 	}
-	if (abs(joystate.lX) >= PAD_POS_MIN ||
-		abs(joystate.lY) >= PAD_POS_MIN)
+	if (abs(m_joystate.lX) >= PAD_POS_MIN ||
+		abs(m_joystate.lY) >= PAD_POS_MIN)
 	{
 		return true;
 	}
@@ -562,7 +549,7 @@ bool Input::isSomeJoypad() {
 
 bool Input::isSomeMouse() {
 	for (int i = 0; i < MOUSE_ARY_MAX; ++i) {
-		if (mousestate.rgbButtons[i] & BUTTON_ON_FLUG) {
+		if (m_mousestate.rgbButtons[i] & BUTTON_ON_FLUG) {
 			return true;
 		}
 	}
@@ -570,16 +557,13 @@ bool Input::isSomeMouse() {
 }
 
 bool Input::isSomeInput() {
-	if (isSomeKey() || isSomeJoypad() || isSomeMouse()) {
-		return true;
-	}
-	return false;
+	return (isSomeKey() || isSomeJoypad() || isSomeMouse());
 }
 
 
 int Input::getSomeKey() {
 	for (int i = 0; i < KEY_ARY_MAX; ++i) {
-		if (keystate[i] & BUTTON_ON_FLUG) {
+		if (m_keystate[i] & BUTTON_ON_FLUG) {
 			return i;
 		}
 	}
@@ -588,20 +572,20 @@ int Input::getSomeKey() {
 
 int Input::getSomeJoypad() {
 	for (int i = 0; i < PAD_BTN_MAX; ++i) {
-		if (joystate.rgbButtons[i] & BUTTON_ON_FLUG) {
+		if (m_joystate.rgbButtons[i] & BUTTON_ON_FLUG) {
 			return i;
 		}
 	}
-	if (joystate.lY <= -PAD_POS_MIN) {
+	if (m_joystate.lY <= -PAD_POS_MIN) {
 		return static_cast<int>(JoypadInput::UP);
 	}
-	if (PAD_POS_MIN <= joystate.lY) {
+	if (PAD_POS_MIN <= m_joystate.lY) {
 		return static_cast<int>(JoypadInput::DOWN);
 	}
-	if (joystate.lX <= -PAD_POS_MIN) {
+	if (m_joystate.lX <= -PAD_POS_MIN) {
 		return static_cast<int>(JoypadInput::LEFT);
 	}
-	if (PAD_POS_MIN <= joystate.lX) {
+	if (PAD_POS_MIN <= m_joystate.lX) {
 		return static_cast<int>(JoypadInput::RIGHT);
 	}
 	return -1;
@@ -609,7 +593,7 @@ int Input::getSomeJoypad() {
 
 int Input::getSomeMouse() {
 	for (int i = 0; i < MOUSE_ARY_MAX; ++i) {
-		if (mousestate.rgbButtons[i] & BUTTON_ON_FLUG) {
+		if (m_mousestate.rgbButtons[i] & BUTTON_ON_FLUG) {
 			return i;
 		}
 	}

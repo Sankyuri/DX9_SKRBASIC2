@@ -9,10 +9,10 @@
 
 
 
-float        g_aspect = 1; //アス比設定用変数
-const TCHAR *g_ClassName = _T("SKR_GAME"); //ウィンドウクラス名
+float   g_aspect    = 1; //アス比設定用変数
+LPCTSTR g_className = _T("SKR_GAME"); //ウィンドウクラス名
 
-extern bool  skipProcesses; //WinMain.cpp の処理スキップ用
+extern bool g_skipProcesses; //WinMain.cpp の処理スキップ用
 
 
 
@@ -26,7 +26,7 @@ void InitWndClass(WNDCLASSEX *a_wc) {
 	a_wc->hInstance = GetModuleHandle(NULL);
 	a_wc->hbrBackground = NULL;
 	a_wc->lpszMenuName = NULL;
-	a_wc->lpszClassName = g_ClassName;
+	a_wc->lpszClassName = g_className;
 
 	//カーソル設定
 	#ifdef IDC_CURSOR1
@@ -85,12 +85,12 @@ LRESULT WINAPI MsgProc(HWND a_hWnd, UINT a_msg, WPARAM a_wParam, LPARAM a_lParam
 
 
 	case WM_KILLFOCUS:
-		skipProcesses = true;
+		g_skipProcesses = true;
 		break;
 
 	case WM_SETFOCUS:
 		SetFocus(a_hWnd);
-		skipProcesses = false;
+		g_skipProcesses = false;
 		break;
 	}
 	return DefWindowProc(a_hWnd, a_msg, a_wParam, a_lParam);
@@ -141,7 +141,7 @@ VOID SetupMatrices()
 
 
 void Message(LPCTSTR text, LPCTSTR title) {
-	MessageBox(hWnd, text, title, MB_OK);
+	MessageBox(g_hWnd, text, title, MB_OK);
 }
 
 

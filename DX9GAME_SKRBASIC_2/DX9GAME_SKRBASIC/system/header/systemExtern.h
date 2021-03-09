@@ -3,10 +3,10 @@
 
 
 //DirectX
-extern LPDIRECT3D9		    g_pD3D;
+extern LPDIRECT3D9          g_pD3D;
 extern LPDIRECT3DDEVICE9    g_pd3dDevice;
-extern HWND                 hWnd;
-extern const TCHAR          *g_ClassName;
+extern HWND                 g_hWnd;
+extern LPCTSTR              g_className;
 
 //DirectInput
 extern LPDIRECTINPUT8       g_pDInput;

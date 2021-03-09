@@ -5,31 +5,31 @@
 
 using namespace skrBasic;
 
-HRESULT FontSimple::setFont(const TCHAR *a_fontName, int a_fontSize, bool a_isItalic) {
-	if (FAILED(setFontInner(a_fontName, a_fontSize, a_isItalic, FW_NORMAL, &pFont))) {
+HRESULT FontSimple::setFont(LPCTSTR a_fontName, int a_fontSize, bool a_isItalic) {
+	if (FAILED(setFontInner(a_fontName, a_fontSize, a_isItalic, FW_NORMAL, &m_pFont))) {
 		return E_FAIL;
 	}
 	return S_OK;
 }
 
-HRESULT FontSimple::setShadowedFont(const TCHAR *a_fontName, int a_fontSize, bool a_isItalic) {
-	if (FAILED(setFontInner(a_fontName, a_fontSize, a_isItalic, FW_NORMAL, &pFont))) {
+HRESULT FontSimple::setShadowedFont(LPCTSTR a_fontName, int a_fontSize, bool a_isItalic) {
+	if (FAILED(setFontInner(a_fontName, a_fontSize, a_isItalic, FW_NORMAL, &m_pFont))) {
 		return E_FAIL;
 	}
-	if (FAILED(setFontInner(a_fontName, a_fontSize, a_isItalic, FW_NORMAL, &pFontShadow))) {
+	if (FAILED(setFontInner(a_fontName, a_fontSize, a_isItalic, FW_NORMAL, &m_pFontShadow))) {
 		return E_FAIL;
 	}
 	return S_OK;
 }
 
-HRESULT FontSimple::setBorderedFont(const TCHAR *a_fontName, int a_fontSize, bool a_isItalic) {
+HRESULT FontSimple::setBorderedFont(LPCTSTR a_fontName, int a_fontSize, bool a_isItalic) {
 	if (FAILED(setShadowedFont(a_fontName, a_fontSize, a_isItalic))) {
 		return E_FAIL;
 	}
 	return S_OK;
 }
 
-HRESULT FontSimple::setFontInner(const TCHAR *a_fontName, int a_fontSize, bool a_isItalic,
+HRESULT FontSimple::setFontInner(LPCTSTR a_fontName, int a_fontSize, bool a_isItalic,
 	                             int a_weight, LPD3DXFONT *a_font)
 {
 	HRESULT hr = D3DXCreateFont(
@@ -48,36 +48,36 @@ HRESULT FontSimple::setFontInner(const TCHAR *a_fontName, int a_fontSize, bool a
 		);
 	if (FAILED(hr)) {
 		Message(_T("フォントの初期化に失敗しました"), _T("Error"));
-		isCanDraw = false;
+		m_isDrawable = false;
 		return E_FAIL;
 	}
-	pFont->PreloadCharacters('a', 'z');
-	pFont->PreloadCharacters('A', 'Z');
-	pFont->PreloadCharacters('0', '9');
-	pFont->PreloadCharacters('ｱ', 'ﾝ');
-	pFont->PreloadCharacters('あ', 'ん');
-	pFont->PreloadCharacters('ア', 'ン');
-	isCanDraw = true;
+	m_pFont->PreloadCharacters('a', 'z');
+	m_pFont->PreloadCharacters('A', 'Z');
+	m_pFont->PreloadCharacters('0', '9');
+	m_pFont->PreloadCharacters('ｱ', 'ﾝ');
+	m_pFont->PreloadCharacters('あ', 'ん');
+	m_pFont->PreloadCharacters('ア', 'ン');
+	m_isDrawable = true;
 	return S_OK;
 }
 
 
 
 
-void FontSimple::drawString(const TCHAR *a_string, int a_x, int a_y, D3DCOLOR a_color) {
-	if (true == isCanDraw) {
+void FontSimple::drawString(LPCTSTR a_string, int a_x, int a_y, D3DCOLOR a_color) {
+	if (m_isDrawable) {
 		drawStringEx(a_string, a_x, a_y, DT_LEFT, a_color);
 	}
 }
 
-void FontSimple::drawStringEx(const TCHAR *a_string, int a_x, int a_y, int a_format, D3DCOLOR a_color) {
-	if (true == isCanDraw) {
-		drawStringInner(a_string, a_x, a_y, a_format, a_color, pFont);
+void FontSimple::drawStringEx(LPCTSTR a_string, int a_x, int a_y, int a_format, D3DCOLOR a_color) {
+	if (m_isDrawable) {
+		drawStringInner(a_string, a_x, a_y, a_format, a_color, m_pFont);
 	}
 }
 
-void FontSimple::drawStringInner(const TCHAR *a_string, int a_x, int a_y, int a_format, D3DCOLOR a_color, LPD3DXFONT a_font) {
-	if (true == isCanDraw) {
+void FontSimple::drawStringInner(LPCTSTR a_string, int a_x, int a_y, int a_format, D3DCOLOR a_color, LPD3DXFONT a_font) {
+	if (m_isDrawable) {
 		RECT rc = { a_x, a_y };
 		a_font->DrawText(NULL, a_string, -1, &rc, DT_CALCRECT, NULL);
 		a_font->DrawText(NULL, a_string, -1, &rc, a_format, a_color);
@@ -85,41 +85,41 @@ void FontSimple::drawStringInner(const TCHAR *a_string, int a_x, int a_y, int a_
 }
 
 
-void FontSimple::drawShadowedString(const TCHAR *a_string, int a_x, int a_y,
+void FontSimple::drawShadowedString(LPCTSTR a_string, int a_x, int a_y,
 	                                D3DCOLOR a_color, int a_sx, int a_sy, D3DCOLOR a_scolor)
 {
 	drawShadowedStringEx(a_string, a_x, a_y, DT_LEFT, a_color, a_sx, a_sy, a_scolor);
 }
 
-void FontSimple::drawShadowedStringEx(const TCHAR *a_string, int a_x, int a_y, int a_format,
+void FontSimple::drawShadowedStringEx(LPCTSTR a_string, int a_x, int a_y, int a_format,
 	                                  D3DCOLOR a_color, int a_sx, int a_sy, D3DCOLOR a_scolor)
 {
-	if (true == isCanDraw) {
-		drawStringInner(a_string, a_x + a_sx, a_y + a_sy, a_format, a_scolor, pFontShadow);
-		drawStringInner(a_string, a_x, a_y, a_format, a_color, pFont);
+	if (m_isDrawable) {
+		drawStringInner(a_string, a_x + a_sx, a_y + a_sy, a_format, a_scolor, m_pFontShadow);
+		drawStringInner(a_string, a_x, a_y, a_format, a_color, m_pFont);
 	}
 }
 
 
-void FontSimple::drawBorderedString(const TCHAR *a_string, int a_x, int a_y,
+void FontSimple::drawBorderedString(LPCTSTR a_string, int a_x, int a_y,
 		                            D3DCOLOR a_color, D3DCOLOR a_bcolor)
 {
 	drawBorderedStringEx(a_string, a_x, a_y, DT_LEFT, a_color, a_bcolor);
 }
 
-void FontSimple::drawBorderedStringEx(const TCHAR *a_string, int a_x, int a_y, int a_format,
+void FontSimple::drawBorderedStringEx(LPCTSTR a_string, int a_x, int a_y, int a_format,
 	                                  D3DCOLOR a_color, D3DCOLOR a_bcolor)
 {
-	if (true == isCanDraw) {
-		drawStringInner(a_string, a_x + 2, a_y    , a_format, a_bcolor, pFontShadow);
-		drawStringInner(a_string, a_x + 2, a_y + 2, a_format, a_bcolor, pFontShadow);
-		drawStringInner(a_string, a_x    , a_y + 2, a_format, a_bcolor, pFontShadow);
-		drawStringInner(a_string, a_x - 2, a_y + 2, a_format, a_bcolor, pFontShadow);
-		drawStringInner(a_string, a_x - 2, a_y    , a_format, a_bcolor, pFontShadow);
-		drawStringInner(a_string, a_x - 2, a_y - 2, a_format, a_bcolor, pFontShadow);
-		drawStringInner(a_string, a_x    , a_y - 2, a_format, a_bcolor, pFontShadow);
-		drawStringInner(a_string, a_x + 2, a_y - 2, a_format, a_bcolor, pFontShadow);
-		drawStringInner(a_string, a_x, a_y, a_format, a_color, pFont);
+	if (m_isDrawable) {
+		drawStringInner(a_string, a_x + 2, a_y    , a_format, a_bcolor, m_pFontShadow);
+		drawStringInner(a_string, a_x + 2, a_y + 2, a_format, a_bcolor, m_pFontShadow);
+		drawStringInner(a_string, a_x    , a_y + 2, a_format, a_bcolor, m_pFontShadow);
+		drawStringInner(a_string, a_x - 2, a_y + 2, a_format, a_bcolor, m_pFontShadow);
+		drawStringInner(a_string, a_x - 2, a_y    , a_format, a_bcolor, m_pFontShadow);
+		drawStringInner(a_string, a_x - 2, a_y - 2, a_format, a_bcolor, m_pFontShadow);
+		drawStringInner(a_string, a_x    , a_y - 2, a_format, a_bcolor, m_pFontShadow);
+		drawStringInner(a_string, a_x + 2, a_y - 2, a_format, a_bcolor, m_pFontShadow);
+		drawStringInner(a_string, a_x, a_y, a_format, a_color, m_pFont);
 	}
 }
 
@@ -127,8 +127,8 @@ void FontSimple::drawBorderedStringEx(const TCHAR *a_string, int a_x, int a_y, i
 
 
 FontSimple::~FontSimple() {
-	SafeRelease(pFont);
-	SafeRelease(pFontShadow);
+	SafeRelease(m_pFont);
+	SafeRelease(m_pFontShadow);
 }
 
 

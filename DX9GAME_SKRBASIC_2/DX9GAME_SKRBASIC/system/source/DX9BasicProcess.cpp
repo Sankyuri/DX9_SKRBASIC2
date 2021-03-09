@@ -59,7 +59,7 @@ void D3DBasicProcess::createWindowSimple(LPCTSTR a_wndName, int a_wndW, int a_wn
 	D3DDISPLAYMODE disppos;
 	g_pD3D = Direct3DCreate9(D3D_SDK_VERSION);
 	g_pD3D->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &disppos);
-	hWnd = CreateWindow(g_ClassName, a_wndName, WINDOW_SETTING,
+	g_hWnd = CreateWindow(g_className, a_wndName, WINDOW_SETTING,
 		                CW_USEDEFAULT, CW_USEDEFAULT,
 		                a_wndW, a_wndH, NULL, NULL, a_wc->hInstance, NULL);
 }
@@ -71,9 +71,9 @@ void D3DBasicProcess::initRenderState() {
 }
 
 void D3DBasicProcess::getWindowRenderState() {
-	g_pd3dDevice->GetViewport(&vp_wnd);
-	g_pd3dDevice->GetRenderTarget(0, &rt_wnd);
-	g_pd3dDevice->GetDepthStencilSurface(&zb_wnd);
+	g_pd3dDevice->GetViewport(&m_wndVp);
+	g_pd3dDevice->GetRenderTarget(0, &m_wndRt);
+	g_pd3dDevice->GetDepthStencilSurface(&m_wndZb);
 }
 
 void D3DBasicProcess::enableAlphaBlend() {
@@ -85,26 +85,26 @@ void D3DBasicProcess::enableAlphaBlend() {
 	g_pd3dDevice->SetRenderState(D3DRS_DESTBLEND       , D3DBLEND_INVSRCALPHA);
 }
 
-HRESULT D3DBasicProcess::D3DBP_SetRenderTarget() {
-	g_pd3dDevice->SetViewport(&vp_wnd);
-	g_pd3dDevice->SetRenderTarget(0, rt_wnd);
-	g_pd3dDevice->SetDepthStencilSurface(zb_wnd);
+HRESULT D3DBasicProcess::D3DBPSetRenderTarget() {
+	g_pd3dDevice->SetViewport(&m_wndVp);
+	g_pd3dDevice->SetRenderTarget(0, m_wndRt);
+	g_pd3dDevice->SetDepthStencilSurface(m_wndZb);
 	return S_OK;
 }
 
 HRESULT D3DBasicProcess::resetRenderTarget() {
-	g_pd3dDevice->SetViewport(&vp_wnd);
-	g_pd3dDevice->SetRenderTarget(0, rt_wnd);
-	g_pd3dDevice->SetDepthStencilSurface(zb_wnd);
+	g_pd3dDevice->SetViewport(&m_wndVp);
+	g_pd3dDevice->SetRenderTarget(0, m_wndRt);
+	g_pd3dDevice->SetDepthStencilSurface(m_wndZb);
 	return S_OK;
 }
 
 ULONGLONG D3DBasicProcess::getGCount() {
-	return gCount;
+	return m_gCount;
 }
 
 void D3DBasicProcess::addGCount() {
-	++gCount;
+	++m_gCount;
 }
 
 

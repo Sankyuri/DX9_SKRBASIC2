@@ -185,36 +185,36 @@ namespace skrBasic {
 
 
 		ImagePolygon();
-		~ImagePolygon();
+		virtual ~ImagePolygon();
 
 	private:
 
-		LPDIRECT3DVERTEXBUFFER9  ppVtxBuf;  //頂点バッファ
+		LPDIRECT3DVERTEXBUFFER9  m_ppVtxBuf;  //頂点バッファ
 
-		D3DXVECTOR3              rcpos;  //ポリゴン上の中心座標
-		D3DTEXTUREADDRESS        sampleModeU; //u(x)方向のラッピング方式
-		D3DTEXTUREADDRESS        sampleModeV; //v(y)方向のラッピング方式
+		D3DXVECTOR3              m_rcpos;  //ポリゴン上の中心座標
+		D3DTEXTUREADDRESS        m_sampleModeU; //u(x)方向のラッピング方式
+		D3DTEXTUREADDRESS        m_sampleModeV; //v(y)方向のラッピング方式
 
-		VERTEX_2D                vtx[4]; //頂点座標
-		void                    *pVtx;   //頂点バッファへのポインタ
+		VERTEX_2D                m_vtx[4]; //頂点座標
+		void                    *m_pVtx;   //頂点バッファへのポインタ
 
-		D3DXMATRIX               mtrx_pos;    //頂点座標の行列
+		D3DXMATRIX               m_mtrxPos;    //頂点座標の行列
 
-		HRESULT load_Common(DWORD a_width, DWORD a_height); //読み込みの共通処理
+		HRESULT loadCommon(DWORD a_width, DWORD a_height); //読み込みの共通処理
 
-		HRESULT load_CreateVtx();    //頂点作成
-		HRESULT load_CreateVtxBuf(); //頂点バッファ作成
+		HRESULT loadCreateVtx();    //頂点作成
+		HRESULT loadCreateVtxBuf(); //頂点バッファ作成
 		HRESULT copyVtx();     //VRAMに頂点情報(？)を書き込む
-		HRESULT draw_SetTex(); //描画するテクスチャを設定
+		HRESULT drawSetTex(); //描画するテクスチャを設定
 		//テクスチャ読み込み
-		HRESULT load_LoadTex(LPCTSTR a_pSrcFile, D3DCOLOR a_keyColor);
+		HRESULT loadLoadTex(LPCTSTR a_pSrcFile, D3DCOLOR a_keyColor);
 		//メモリからテクスチャ読み込み
-		HRESULT load_LoadTexMem(const BYTE a_data[], DWORD a_size, D3DCOLOR a_keyColor);
+		HRESULT loadLoadTexMem(const BYTE a_data[], DWORD a_size, D3DCOLOR a_keyColor);
 		//リソースファイルからテクスチャ読み込み
-		HRESULT load_LoadTexRscFil(LPCTSTR a_pSrcFile, DWORD a_size, DWORD a_offset,
+		HRESULT loadLoadTexRscFil(LPCTSTR a_pSrcFile, DWORD a_size, DWORD a_offset,
 								   D3DCOLOR a_keyColor);
 		//リソースからテクスチャ読み込み
-		HRESULT load_LoadTexRsc(int a_id, D3DCOLOR a_keyColor);
+		HRESULT loadLoadTexRsc(int a_id, D3DCOLOR a_keyColor);
 
 		void    matrixFinallyA(D3DXMATRIX *a_mtrx);      //行列最終処理
 		void    matrixFinallyB(D3DXMATRIX *a_mtrx);      //原点に戻す処理を必要とする場合用

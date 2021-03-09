@@ -97,7 +97,11 @@ namespace skrBasic {
 		//マウスで画像に何らかの入力をしたか
 		bool isSomeMouseOn();
 
-		
+
+
+
+		ImageBase();
+		virtual ~ImageBase();
 
 
 		//テクスチャを取得<システム用>
@@ -105,27 +109,27 @@ namespace skrBasic {
 		LPDIRECT3DTEXTURE9 getTexture();
 
 	protected:
-		bool                isCanDraw;     //描画できるか
+		bool                m_isDrawable;     //描画できるか
 
-		LPDIRECT3DTEXTURE9  ppTexture;     //テクスチャ
-		ImageBase          *pReferTexture; //テクスチャを参照使用
+		LPDIRECT3DTEXTURE9  m_ppTexture;     //テクスチャ
+		ImageBase          *m_pReferTexture; //テクスチャを参照使用
 
-		D3DVIEWPORT9        vpSurf;        //レンダリングターゲット変更用ビューポート
-		LPDIRECT3DSURFACE9  rtSurf;        //レンダリングターゲット変更用サーフェイス
-		LPDIRECT3DSURFACE9  zbSurf;        //レンダリングターゲット変更用Zバッファサーフェイス
+		D3DVIEWPORT9        m_vpSurf;        //レンダリングターゲット変更用ビューポート
+		LPDIRECT3DSURFACE9  m_rtSurf;        //レンダリングターゲット変更用サーフェイス
+		LPDIRECT3DSURFACE9  m_zbSurf;        //レンダリングターゲット変更用Zバッファサーフェイス
 
-		LONG                width;         //画像幅
-		LONG                height;        //画像高さ
-		D3DXVECTOR3         pos;           //座標
-		D3DXVECTOR3         cpos;          //中心座標
-		D3DXVECTOR3         scale;         //拡大率
-		D3DXVECTOR3         angle;         //角度
+		LONG                m_width;         //画像幅
+		LONG                m_height;        //画像高さ
+		D3DXVECTOR3         m_pos;           //座標
+		D3DXVECTOR3         m_cpos;          //中心座標
+		D3DXVECTOR3         m_scale;         //拡大率
+		D3DXVECTOR3         m_angle;         //角度
 
-		D3DBLEND            blendMode;     //アルファブレンドの方式
+		D3DBLEND            m_blendMode;     //アルファブレンドの方式
 
-		D3DXMATRIX          mtrx_move;     //平行移動行列
-		D3DXMATRIX          mtrx_scale;    //拡大縮小行列
-		D3DXMATRIX          mtrx_rotate;   //回転行列
+		D3DXMATRIX          m_mtrxMove;     //平行移動行列
+		D3DXMATRIX          m_mtrxScale;    //拡大縮小行列
+		D3DXMATRIX          m_mtrxRotate;   //回転行列
 
 
 	private:

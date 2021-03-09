@@ -13,7 +13,7 @@ int SystemParam::getWindowHeight() {
 	return WINDOW_HEIGHT;
 }
 
-std::_tstring SystemParam::getWindowTitle() {
+stdex::_tstring SystemParam::getWindowTitle() {
 	return GAME_TITLE;
 }
 

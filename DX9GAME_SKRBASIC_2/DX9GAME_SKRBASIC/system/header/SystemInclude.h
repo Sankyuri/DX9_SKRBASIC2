@@ -37,7 +37,7 @@ typedef struct tagPOSITION_2D POSITION_2D;
 typedef struct tagPOSITION_3D POSITION_3D;
 
 //画像のクロマキーを指定する
-typedef struct tagALPHA_KEYCOLOR_SETTING ALPHA_KEYCOLOR_SETTING;
+typedef struct tagALPHA_KEYCOLOR ALPHA_KEYCOLOR;
 
 //画像の基本設定をする構造体
 typedef struct tagTEXTURE_BASIC_SETTING TEXTURE_BASIC_SETTING;

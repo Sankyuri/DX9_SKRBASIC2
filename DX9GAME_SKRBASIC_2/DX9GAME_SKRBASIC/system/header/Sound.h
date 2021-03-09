@@ -33,7 +33,7 @@ namespace skrBasic {
 		//@param a_offset    波形データ開始迄のオフセット
 		//@param a_loopStart ループ範囲開始時間 [ms]
 		//@param a_loopEnd   ループ範囲終了時間 [ms]
-		HRESULT loadFromMemory(const UCHAR a_data[], DWORD a_sizeByte, DWORD a_offset,
+		HRESULT loadFromMemory(const BYTE a_data[], DWORD a_sizeByte, DWORD a_offset,
 							   DWORD a_loopStart = 0L, DWORD a_loopEnd = 0L);
 
 		
@@ -60,37 +60,37 @@ namespace skrBasic {
 		Sound();
 		~Sound();
 	private:
-		DWORD  dwOffset, dwBlockBytes;
-		LPVOID lpvPtr1,  lpvPtr2;
-		DWORD  dwBytes1, dwBytes2;
+		DWORD  m_dwOffset, m_dwBlockBytes;
+		LPVOID m_lpvPtr1,  m_lpvPtr2;
+		DWORD  m_dwBytes1, m_dwBytes2;
 	
-		DWORD  playcur,  writecur;
+		DWORD  m_playcur,  m_writecur;
 
-		HMMIO         hMmio;    //所謂FPのようなもの
-		MMIOINFO      mmInfo;   //ファイル情報
-		MMCKINFO      mmrifck;  //RIFFチャンク情報 ('R', 'I', 'F', 'F')
-		MMCKINFO      mmfmtck;  //フォーマットチャンク ('f', 'm', 't', ' ')
-		MMCKINFO      mmdatck;  //データチャンク ('d', 'a', 't', 'a')
-		WAVEFORMATEX  wavfmtex; //wave ファイル情報
-		BYTE         *pData;    //音声データ
+		HMMIO         m_hMmio;    //所謂FPのようなもの
+		MMIOINFO      m_mmInfo;   //ファイル情報
+		MMCKINFO      m_mmrifck;  //RIFFチャンク情報 ('R', 'I', 'F', 'F')
+		MMCKINFO      m_mmfmtck;  //フォーマットチャンク ('f', 'm', 't', ' ')
+		MMCKINFO      m_mmdatck;  //データチャンク ('d', 'a', 't', 'a')
+		WAVEFORMATEX  m_wavfmtex; //wave ファイル情報
+		BYTE         *m_pData;    //音声データ
 
-		LPDIRECTSOUNDBUFFER8 pDSSecBuf; //セカンダリバッファ
+		LPDIRECTSOUNDBUFFER8 m_pDSSecBuf; //セカンダリバッファ
 
-		bool  canPlay;      //再生できるか
-		bool  nowPlaying;   //再生中か
-		bool  wasBGMLooped; //BGM専用:ループしたか(厳密にはそうじゃ無い)
-		bool  useCustomLoop; //ループを特定範囲内で行うか
-		DWORD loopStartPos, loopEndPos;    //ループスタート地点、ループエンド地点
+		bool  m_isPlayable;    //再生できるか
+		bool  m_isPlaying;     //再生中か
+		bool  m_wasBGMLooped;  //BGM専用:ループしたか(厳密にはそうじゃ無い)
+		bool  m_useCustomLoop; //ループを特定範囲内で行うか
+		DWORD m_loopStartPos, m_loopEndPos;    //ループスタート地点、ループエンド地点
 
-		HRESULT dSoundCreateSecondaryBuffer(DWORD rate, float lengthSec); //セカンダリバッファの作成
+		HRESULT dSoundCreateSecondaryBuffer(DWORD a_rate, float a_lengthSec); //セカンダリバッファの作成
 
 		HRESULT dSoundLockBuf();   //サウンドバッファのロック
 		HRESULT dSoundUnlockBuf(); //サウンドバッファのアンロック
 
-		HRESULT dSoundOpenFile(LPTSTR pSrcFile); //音声ファイルを開く
+		HRESULT dSoundOpenFile(LPTSTR a_pSrcFile); //音声ファイルを開く
 		HRESULT dSoundLoadToBuf(); //音声ファイルをメモリにロード
 
-		void    setCustomLoop(DWORD loopStart, DWORD loopEnd);
+		void    setCustomLoop(DWORD a_loopStart, DWORD a_loopEnd);
 
 
 	};

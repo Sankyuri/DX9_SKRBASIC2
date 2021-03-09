@@ -15,7 +15,7 @@ namespace skrBasic {
 	const int SystemParam::WINDOW_HEIGHT =  720;
 
 	//ウィンドウのタイトル
-	const std::_tstring SystemParam::GAME_TITLE = _T("楽しい楽しいノベルゲーム");
+	const stdex::_tstring SystemParam::GAME_TITLE = _T("楽しい楽しいノベルゲーム");
 
 	//DSound のPバッファのサンプリングレート
 	const DWORD SystemParam::DSOUND_SAMPLINGRATE = 44100;

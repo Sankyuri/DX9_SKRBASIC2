@@ -15,12 +15,12 @@ using namespace skrBasic;
 					  DSBCAPS_CTRLVOLUME)
 
 static HRESULT InitDSBufBuffer();
-static HRESULT InitDSBufFmtWave(DWORD samplingRate);
+static HRESULT InitDSBufFmtWave(DWORD a_samplingRate);
 
 void InitDSound(DWORD a_samplingRate){
 	DirectSoundCreate8(nullptr, &g_pDSound, nullptr);
 	if (g_pDSound != nullptr) {
-		if (SUCCEEDED(g_pDSound->SetCooperativeLevel(hWnd, DSSCL_EXCLUSIVE))) {
+		if (SUCCEEDED(g_pDSound->SetCooperativeLevel(g_hWnd, DSSCL_EXCLUSIVE))) {
 			if (SUCCEEDED(InitDSBufBuffer())) {
 				if (SUCCEEDED(InitDSBufFmtWave(a_samplingRate))) {
 					return;
@@ -91,7 +91,7 @@ HRESULT Sound::dSoundCreateSecondaryBuffer(DWORD a_rate, float a_lengthSec) {
 		Message(_T("セカンダリサウンドバッファの生成に失敗しました(DSB)"), _T("Error"));
 		return E_FAIL;
 	}
-	hr = ptmpBuf->QueryInterface(IID_IDirectSoundBuffer8, (void **)&pDSSecBuf);
+	hr = ptmpBuf->QueryInterface(IID_IDirectSoundBuffer8, (void **)&m_pDSSecBuf);
 	if (FAILED(hr)) {
 		Message(_T("セカンダリサウンドバッファの生成に失敗しました(DSB8)"), _T("Error"));
 		ptmpBuf->Release();
@@ -103,12 +103,12 @@ HRESULT Sound::dSoundCreateSecondaryBuffer(DWORD a_rate, float a_lengthSec) {
 
 HRESULT Sound::dSoundLockBuf() {
 	HRESULT hr;
-	if (FAILED(hr = pDSSecBuf->Lock(0, mmdatck.cksize, &lpvPtr1,
-		                            &dwBytes1, &lpvPtr2, &dwBytes2, 0)))
+	if (FAILED(hr = m_pDSSecBuf->Lock(0, m_mmdatck.cksize, &m_lpvPtr1,
+		                            &m_dwBytes1, &m_lpvPtr2, &m_dwBytes2, 0)))
 	{
-		pDSSecBuf->Restore();
-		if (FAILED(hr = pDSSecBuf->Lock(0, mmdatck.cksize, &lpvPtr1,
-			                            &dwBytes1, &lpvPtr2, &dwBytes2, 0)))
+		m_pDSSecBuf->Restore();
+		if (FAILED(hr = m_pDSSecBuf->Lock(0, m_mmdatck.cksize, &m_lpvPtr1,
+			                            &m_dwBytes1, &m_lpvPtr2, &m_dwBytes2, 0)))
 		{
 			Message(_T("サウンドバッファのロックに失敗しました"), _T("Error"));
 			return E_FAIL;
@@ -117,7 +117,7 @@ HRESULT Sound::dSoundLockBuf() {
 	return S_OK;
 }
 HRESULT Sound::dSoundUnlockBuf() {
-	if (FAILED(pDSSecBuf->Unlock(lpvPtr1, dwBytes1, lpvPtr2, dwBytes2))) {
+	if (FAILED(m_pDSSecBuf->Unlock(m_lpvPtr1, m_dwBytes1, m_lpvPtr2, m_dwBytes2))) {
 		Message(_T("サウンドバッファのアンロックに失敗しました"), _T("Error"));
 		return E_FAIL;
 	}
@@ -128,26 +128,26 @@ HRESULT Sound::dSoundUnlockBuf() {
 HRESULT Sound::load(LPCTSTR a_pSrcFile, DWORD a_loopStart, DWORD a_loopEnd)
 {
 	if (E_FAIL == dSoundOpenFile(const_cast<LPTSTR>(a_pSrcFile))) {
-		mmioClose(hMmio, 0);
+		mmioClose(m_hMmio, 0);
 		return E_FAIL;
 	}
-	mmioClose(hMmio, 0);
+	mmioClose(m_hMmio, 0);
 
 	//曲の長さ(sec)を求める(旧バージョンの a_lenthSec に当たる)
-	float length = (float)(mmrifck.cksize + mmrifck.dwDataOffset) /
-		           (float)wavfmtex.nAvgBytesPerSec;
+	float length = (float)(m_mmrifck.cksize + m_mmrifck.dwDataOffset) /
+		           (float)m_wavfmtex.nAvgBytesPerSec;
 
 	//バッファリング
-	if (FAILED(dSoundCreateSecondaryBuffer(wavfmtex.nSamplesPerSec, length)) ||
+	if (FAILED(dSoundCreateSecondaryBuffer(m_wavfmtex.nSamplesPerSec, length)) ||
 		FAILED(dSoundLockBuf()))
 	{
 		return E_FAIL;
 	}
 
-	memcpy(lpvPtr1, pData, mmdatck.cksize);
+	memcpy(m_lpvPtr1, m_pData, m_mmdatck.cksize);
 	dSoundUnlockBuf();
 	setCustomLoop(a_loopStart, a_loopEnd);
-	canPlay = true;
+	m_isPlayable = true;
 
 	return S_OK;
 }
@@ -155,43 +155,43 @@ HRESULT Sound::load(LPCTSTR a_pSrcFile, DWORD a_loopStart, DWORD a_loopEnd)
 HRESULT Sound::loadFromResourceFile(LPCTSTR a_pSrcFile,
 		DWORD a_size, DWORD a_offset, DWORD a_loopStart, DWORD a_loopEnd)
 {
-	hMmio = mmioOpen(const_cast<LPTSTR>(a_pSrcFile), &mmInfo, MMIO_READ);
+	m_hMmio = mmioOpen(const_cast<LPTSTR>(a_pSrcFile), &m_mmInfo, MMIO_READ);
 	//音声ファイル開く
-	if (nullptr == hMmio) {
+	if (nullptr == m_hMmio) {
 		Message(_T("音声ファイルを開けませんでした"), _T("Error"));
 		return E_FAIL;
 	}
 
 	//音声データ格納
-	pData = new BYTE[a_size]; // バッファ作成
-	mmioSeek(hMmio, a_offset, SEEK_SET); // オフセット分ずらす
-	if (mmioRead(hMmio, (HPSTR)pData, a_size) != a_size) { // 読み込み
+	m_pData = new BYTE[a_size]; // バッファ作成
+	mmioSeek(m_hMmio, a_offset, SEEK_SET); // オフセット分ずらす
+	if (mmioRead(m_hMmio, (HPSTR)m_pData, a_size) != a_size) { // 読み込み
 		Message(_T("音声ファイルを格納できませんでした"), _T("Error"));
-		delete[] pData;
-		mmioClose(hMmio, 0);
+		delete[] m_pData;
+		mmioClose(m_hMmio, 0);
 		return E_FAIL;
 	}
-	mmioClose(hMmio, 0);
+	mmioClose(m_hMmio, 0);
 
 	//曲の長さ(sec)を求めてバッファリング
 	DWORD smpRate = SystemParam::getDSPBufSamplingRate();
-	wavfmtex.nChannels      = 2;
-	wavfmtex.wBitsPerSample = 16;
-	wavfmtex.nSamplesPerSec = smpRate;
-	mmdatck.cksize          = a_size;
-	float length = mmdatck.cksize
-			/ ((wavfmtex.nChannels * wavfmtex.wBitsPerSample / 8.0f)
-				* wavfmtex.nSamplesPerSec) + 1.0f;
+	m_wavfmtex.nChannels      = 2;
+	m_wavfmtex.wBitsPerSample = 16;
+	m_wavfmtex.nSamplesPerSec = smpRate;
+	m_mmdatck.cksize          = a_size;
+	float length = m_mmdatck.cksize
+			/ ((m_wavfmtex.nChannels * m_wavfmtex.wBitsPerSample / 8.0f)
+				* m_wavfmtex.nSamplesPerSec) + 1.0f;
 	if (FAILED(dSoundCreateSecondaryBuffer(smpRate, length)) ||
 		FAILED(dSoundLockBuf()))
 	{
 		return E_FAIL;
 	}
 
-	memcpy(lpvPtr1, pData, mmdatck.cksize);
+	memcpy(m_lpvPtr1, m_pData, m_mmdatck.cksize);
 	dSoundUnlockBuf();
 	setCustomLoop(a_loopStart, a_loopEnd);
-	canPlay = true;
+	m_isPlayable = true;
 
 	return S_OK;
 }
@@ -210,28 +210,28 @@ HRESULT Sound::loadFromMemory(const BYTE a_data[],
 		Message(_T("音声データのサイズが足りません"), _T("Error"));
 		return E_FAIL;
 	}
-	pData = new BYTE[a_size];
-	memcpy(pData, a_data + a_offset, a_size);
+	m_pData = new BYTE[a_size];
+	memcpy(m_pData, a_data + a_offset, a_size);
 
 	//曲の長さ(sec)を求めてバッファリング
 	DWORD smpRate = SystemParam::getDSPBufSamplingRate();
-	wavfmtex.nChannels = 2;
-	wavfmtex.wBitsPerSample = 16;
-	wavfmtex.nSamplesPerSec = smpRate;
-	mmdatck.cksize          = a_size;
-	float length = mmdatck.cksize
-			/ ((wavfmtex.nChannels * wavfmtex.wBitsPerSample / 8.0f)
-				* wavfmtex.nSamplesPerSec) + 1.0f;
+	m_wavfmtex.nChannels = 2;
+	m_wavfmtex.wBitsPerSample = 16;
+	m_wavfmtex.nSamplesPerSec = smpRate;
+	m_mmdatck.cksize          = a_size;
+	float length = m_mmdatck.cksize
+			/ ((m_wavfmtex.nChannels * m_wavfmtex.wBitsPerSample / 8.0f)
+				* m_wavfmtex.nSamplesPerSec) + 1.0f;
 	if (FAILED(dSoundCreateSecondaryBuffer(smpRate, length)) ||
 		FAILED(dSoundLockBuf()))
 	{
 		return E_FAIL;
 	}
 
-	memcpy(lpvPtr1, pData, mmdatck.cksize);
+	memcpy(m_lpvPtr1, m_pData, m_mmdatck.cksize);
 	dSoundUnlockBuf();
 	setCustomLoop(a_loopStart, a_loopEnd);
-	canPlay = true;
+	m_isPlayable = true;
 
 	return S_OK;
 }
@@ -239,12 +239,12 @@ HRESULT Sound::loadFromMemory(const BYTE a_data[],
 void Sound::setCustomLoop(DWORD a_loopStart, DWORD a_loopEnd){
 	//loopStart < loopEnd で、 loopEnd が0超過の場合はカスタムループ
 	if (a_loopStart < a_loopEnd && 0 < a_loopEnd) {
-		useCustomLoop     = true;
-		float bitrateByte = wavfmtex.nSamplesPerSec *
-			                wavfmtex.wBitsPerSample *
-			                wavfmtex.nChannels / 8;
-		loopStartPos      = bitrateByte * ((float)a_loopStart / 1000.0f); //ミリ秒なので
-		loopEndPos        = bitrateByte * ((float)a_loopEnd   / 1000.0f); //1000.0fで割る
+		m_useCustomLoop     = true;
+		float bitrateByte = m_wavfmtex.nSamplesPerSec *
+			                m_wavfmtex.wBitsPerSample *
+			                m_wavfmtex.nChannels / 8;
+		m_loopStartPos      = bitrateByte * ((float)a_loopStart / 1000.0f); //ミリ秒なので
+		m_loopEndPos        = bitrateByte * ((float)a_loopEnd   / 1000.0f); //1000.0fで割る
 	}
 }
 
@@ -252,37 +252,37 @@ void Sound::setCustomLoop(DWORD a_loopStart, DWORD a_loopEnd){
 
 HRESULT Sound::dSoundOpenFile(LPTSTR pSrcFile) {
 	DWORD size;
-	hMmio = mmioOpen(pSrcFile, &mmInfo, MMIO_READ);
+	m_hMmio = mmioOpen(pSrcFile, &m_mmInfo, MMIO_READ);
 	//音声ファイル開く
-	if (NULL == hMmio) {
+	if (NULL == m_hMmio) {
 		Message(_T("音声ファイルを開けませんでした"), _T("Error"));
 		return E_FAIL;
 	}
 
 	//RIFFチャンク検索
-	mmrifck.fccType = mmioFOURCC('W', 'A', 'V', 'E');
-	if (MMSYSERR_NOERROR != mmioDescend(hMmio, &mmrifck, NULL, MMIO_FINDRIFF)) {
+	m_mmrifck.fccType = mmioFOURCC('W', 'A', 'V', 'E');
+	if (MMSYSERR_NOERROR != mmioDescend(m_hMmio, &m_mmrifck, NULL, MMIO_FINDRIFF)) {
 		Message(_T("音声ファイルの読み込みに失敗しました(RIFF)\n\
 音声ファイルではない可能性があります"), _T("Error"));
 		return E_FAIL;
 	}
 
 	//Formatチャンク検索
-	mmfmtck.ckid = mmioFOURCC('f', 'm', 't', ' ');
-	if (MMSYSERR_NOERROR != mmioDescend(hMmio, &mmfmtck, &mmrifck, MMIO_FINDCHUNK)) {
+	m_mmfmtck.ckid = mmioFOURCC('f', 'm', 't', ' ');
+	if (MMSYSERR_NOERROR != mmioDescend(m_hMmio, &m_mmfmtck, &m_mmrifck, MMIO_FINDCHUNK)) {
 		Message(_T("音声ファイルの読み込みに失敗しました(FMT)\n\
 音声ファイルではない可能性があります"), _T("Error"));
 		return E_FAIL;
 	}
 
 	//wave ファイル情報取得
-	if ((size = mmioRead(hMmio, (HPSTR)&wavfmtex, mmfmtck.cksize)) != mmfmtck.cksize) {
+	if ((size = mmioRead(m_hMmio, (HPSTR)&m_wavfmtex, m_mmfmtck.cksize)) != m_mmfmtck.cksize) {
 		Message(_T("音声ファイルの読み込みに失敗しました"), _T("Error"));
 		return E_FAIL;
 	}
 
 	//カーソルを先頭に戻す(dataチャンク検索の為)
-	mmioAscend(hMmio, &mmfmtck, 0);
+	mmioAscend(m_hMmio, &m_mmfmtck, 0);
 
 	//音声データ格納
 	if (E_FAIL == dSoundLoadToBuf()) {
@@ -295,15 +295,15 @@ HRESULT Sound::dSoundOpenFile(LPTSTR pSrcFile) {
 
 HRESULT Sound::dSoundLoadToBuf() {
 	//データチャンク検索
-	mmdatck.ckid = mmioFOURCC('d', 'a', 't', 'a');
-	if (0u != mmioDescend(hMmio, &mmdatck, &mmrifck, MMIO_FINDCHUNK)) {
+	m_mmdatck.ckid = mmioFOURCC('d', 'a', 't', 'a');
+	if (0u != mmioDescend(m_hMmio, &m_mmdatck, &m_mmrifck, MMIO_FINDCHUNK)) {
 		return E_FAIL;
 	}
 
 	//音声データ格納
-	pData = new BYTE[mmdatck.cksize];
-	if (mmioRead(hMmio, (HPSTR)pData, mmdatck.cksize) != mmdatck.cksize) {
-		delete[] pData;
+	m_pData = new BYTE[m_mmdatck.cksize];
+	if (mmioRead(m_hMmio, (HPSTR)m_pData, m_mmdatck.cksize) != m_mmdatck.cksize) {
+		delete[] m_pData;
 		return E_FAIL;
 	}
 	return S_OK;
@@ -313,51 +313,51 @@ HRESULT Sound::dSoundLoadToBuf() {
 
 
 void Sound::playBGM() {
-	if (canPlay) {
-		pDSSecBuf->Play(0, 0, DSBPLAY_LOOPING);
-		nowPlaying = true;
+	if (m_isPlayable) {
+		m_pDSSecBuf->Play(0, 0, DSBPLAY_LOOPING);
+		m_isPlaying = true;
 	}
 }
 
 void Sound::playSE() {
-	if (canPlay) {
-		if (nowPlaying) {
+	if (m_isPlayable) {
+		if (m_isPlaying) {
 			stop();
 		}
-		pDSSecBuf->Play(0, 0, 0);
-		nowPlaying = true;
+		m_pDSSecBuf->Play(0, 0, 0);
+		m_isPlaying = true;
 	}
 }
 
 void Sound::pause() {
-	if (canPlay) {
-		pDSSecBuf->Stop();
-		nowPlaying = false;
+	if (m_isPlayable) {
+		m_pDSSecBuf->Stop();
+		m_isPlaying = false;
 	}
 }
 
 void Sound::stop() {
-	if (canPlay) {
-		pDSSecBuf->Stop();
-		pDSSecBuf->SetCurrentPosition(0);
-		nowPlaying = false;
+	if (m_isPlayable) {
+		m_pDSSecBuf->Stop();
+		m_pDSSecBuf->SetCurrentPosition(0);
+		m_isPlaying = false;
 	}
 }
 
 void Sound::deleteSound() {
-	if (canPlay) {
-		SafeRelease(pDSSecBuf);
-		SafeDeleteArray(pData);
-		nowPlaying = false;
-		canPlay    = false;
+	if (m_isPlayable) {
+		SafeRelease(m_pDSSecBuf);
+		SafeDeleteArray(m_pData);
+		m_isPlaying  = false;
+		m_isPlayable = false;
 	}
 }
 
 void Sound::checkBGMLoop() {
-	if (useCustomLoop){
-		if (nowPlaying && SUCCEEDED(pDSSecBuf->GetCurrentPosition(&playcur, &writecur))) {
-			if (loopEndPos < writecur) {
-				pDSSecBuf->SetCurrentPosition(loopStartPos);
+	if (m_useCustomLoop){
+		if (m_isPlaying && SUCCEEDED(m_pDSSecBuf->GetCurrentPosition(&m_playcur, &m_writecur))) {
+			if (m_loopEndPos < m_writecur) {
+				m_pDSSecBuf->SetCurrentPosition(m_loopStartPos);
 			}
 		}
 	}
@@ -370,23 +370,24 @@ void Sound::checkBGMLoop() {
 
 
 
-Sound::Sound() {
-	ZeroMemory(&mmInfo ,  sizeof(MMIOINFO));
-	ZeroMemory(&mmrifck,  sizeof(MMCKINFO));
-	ZeroMemory(&mmfmtck,  sizeof(MMCKINFO));
-	ZeroMemory(&mmdatck,  sizeof(MMCKINFO));
-	ZeroMemory(&wavfmtex, sizeof(WAVEFORMATEX));
-	hMmio      = nullptr;
-	pData      = nullptr;
-	nowPlaying = canPlay      = false;
-	loopEndPos = loopStartPos = 0;
-	
+Sound::Sound() :
+	m_mmInfo{0},
+	m_mmrifck{0},
+	m_mmfmtck{0},
+	m_mmdatck{0},
+	m_wavfmtex{0},
+	m_hMmio(nullptr),
+	m_pData(nullptr),
+	m_isPlaying(false),
+	m_isPlayable(false),
+	m_loopEndPos(0),
+	m_loopStartPos(0)
+{
+	// none
 }
 
 Sound::~Sound() {
-	if (pData != nullptr) {
-		delete[] pData;
-	}
+	SafeDeleteArray(m_pData);
 }
 
 

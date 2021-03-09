@@ -220,17 +220,17 @@ namespace skrBasic {
 		static const int PAD_POS_MIN   =  32; //パッド軸の傾き最小
 
 
-		static BYTE          keystate[KEY_ARY_MAX];   //キーボード入力代入先
-		static DIJOYSTATE    joystate;                //ゲームパッド入力代入先
-		static DIMOUSESTATE2 mousestate;              //マウス入力代入先
-		static bool          wasKeyIn[KEY_ARY_MAX];   //現在のキーボード入力
-		static bool          wasJoyIn[PAD_ARY_MAX];   //現在のゲームパッド入力
-		static bool          wasClick[MOUSE_ARY_MAX]; //現在のマウス入力
-		static POINT         mousePt;                 //現在のマウスのビューポート座標
-		static POINT         preMousePt;              //前回のマウスのビューポート座標
+		static BYTE          m_keystate[KEY_ARY_MAX];   //キーボード入力代入先
+		static DIJOYSTATE    m_joystate;                //ゲームパッド入力代入先
+		static DIMOUSESTATE2 m_mousestate;              //マウス入力代入先
+		static bool          m_wasKeyIn[KEY_ARY_MAX];   //現在のキーボード入力
+		static bool          m_wasJoyIn[PAD_ARY_MAX];   //現在のゲームパッド入力
+		static bool          m_wasClick[MOUSE_ARY_MAX]; //現在のマウス入力
+		static POINT         m_mousePt;                 //現在のマウスのビューポート座標
+		static POINT         m_preMousePt;              //前回のマウスのビューポート座標
 
-		static bool    useJoypad;       //ジョイパッドを使用できるか
-		static bool    useMouse;        //マウスを使用できるか
+		static bool    m_useJoypad;       //ジョイパッドを使用できるか
+		static bool    m_useMouse;        //マウスを使用できるか
 
 		static HRESULT initKeyboard();  //キーボード初期化
 		static HRESULT initJoypad();    //ゲームパッド初期化
