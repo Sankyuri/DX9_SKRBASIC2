@@ -32,7 +32,7 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, INT) {
 
 	//ウィンドウクラス設定
 	WNDCLASSEX wc;
-	InitWndClass(&wc);
+	InitWndClass(wc);
 
 	//正しいウィンドウサイズにしてウィンドウを作る
 	const int wndWidth
@@ -53,7 +53,7 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, INT) {
 	}
 
 	//ウィンドウ生成
-	game.createWindowSimple(SystemParam::getWindowTitle().c_str(), wndWidth, wndHeight, &wc);
+	game.createWindowSimple(SystemParam::getWindowTitle().c_str(), wndWidth, wndHeight, wc);
 
 	//D3Dの初期化
 	if (SUCCEEDED(game.initD3D(g_hWnd))) {
@@ -75,10 +75,14 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, INT) {
 
 
 		//ゲーム本体の初期処理
-		game.init();
+		if (FAILED(game.init())) {
+			// 処理に失敗したら終了する
+			game.gameEnd();
+		}
 
 
 
+		timeBeginPeriod(1);
 
 		//メイン
 		while (msg.message != WM_QUIT) {
@@ -86,17 +90,17 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, INT) {
 			//CPUへのウェイト
 			Sleep(1);
 
+			//ゲームを終了するか
+			if (g_isGameEnd) {
+				break;
+			}
+
 			/*
 			//フレームレート固定
 			if () {
 
 			}
 			*/
-
-			//ゲームを終了するか
-			if (g_isGameEnd) {
-				break;
-			}
 
 
 			//ループ処理
@@ -107,7 +111,7 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, INT) {
 			}
 
 			//D3Dデバイスがリリースされていた場合の対策
-			if (g_pd3dDevice == NULL) {
+			if (nullptr == g_pd3dDevice) {
 				break;
 			}
 
@@ -115,6 +119,12 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, INT) {
 //			if (skipProcesses) {
 //				continue;
 //			}
+
+			// BGMのループチェック
+			if (FAILED(game.bgmLoop())) {
+				// 処理に失敗したら終了する
+				game.gameEnd();
+			}
 
 			//スローモードの時は一定間隔で処理
 			if (g_isSlowMode) {
@@ -126,7 +136,7 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, INT) {
 			}
 
 			//ウィンドウを単色クリア
-			g_pd3dDevice->Clear(0, NULL, D3DCLEAR_TARGET, SystemParam::getClearColor(), 1.0f, 0);
+			g_pd3dDevice->Clear(0, nullptr, D3DCLEAR_TARGET, SystemParam::getClearColor(), 1.0f, 0);
 
 			//描画と更新の処理(BeginSceneが成功した場合に実行)
 			if (SUCCEEDED(g_pd3dDevice->BeginScene())) {
@@ -139,7 +149,10 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, INT) {
 				}
 
 				//メインループ
-				game.main();
+				if (FAILED(game.main())) {
+					// 処理に失敗したら終了する
+					game.gameEnd();
+				}
 
 				//描画を終了
 				g_pd3dDevice->EndScene();
@@ -147,15 +160,17 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, INT) {
 				//グローバルカウントを加算
 				game.addGCount();
 
-			}
+			} // if (SUCCEEDED(g_pd3dDevice->BeginScene()))
 
-			g_pd3dDevice->Present(NULL, NULL, NULL, NULL); //バッファを交換(描画)
+			//バッファを交換(描画)
+			g_pd3dDevice->Present(NULL, NULL, NULL, NULL);
 
 		} // while (msg.message != WM_QUIT)
 
 	} // if (SUCCEEDED(game.InitD3D(hWnd)))
 
 	//終了処理
+	timeEndPeriod(1);
 	ShowCursor(true);
 	Release();
 	UnregisterClass(g_className, wc.hInstance);
@@ -165,16 +180,20 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, INT) {
 //起動ロード時の背景表示
 static void drawStartupBG() {
 	ImagePolygon bg;
-	FILE *fp; //ファイル存在チェック用
+	//ファイル存在チェック
+	FILE *fp;
 	fp = _tfopen(_T("resource/img/bg/bg_startupBG.png"), _T("r"));
 	if (NULL == fp) { //存在しない場合は処理を終了
 		return;
 	}
 	fclose(fp);
-	bg.load(_T("resource/img/bg/bg_startupBG.png"),
-			SystemParam::getWindowWidth(), SystemParam::getWindowHeight(), NULL);
-	bg.setPos(SystemParam::getWindowWidth() / 2, SystemParam::getWindowHeight() / 2);
-	g_pd3dDevice->Clear(0, NULL, D3DCLEAR_TARGET, SystemParam::getClearColor(), 1.0f, 0);
+	// 背景描画
+	//背景表示処理
+	auto wndw = SystemParam::getWindowWidth();
+	auto wndh = SystemParam::getWindowHeight();
+	bg.load(_T("resource/img/bg/bg_startupBG.png"), wndw, wndh, D3DCOLOR(0));
+	bg.setPos(wndw / 2.0f, wndh / 2.0f); // 画面中央に移動
+	g_pd3dDevice->Clear(0, nullptr, D3DCLEAR_TARGET, SystemParam::getClearColor(), 1.0f, 0);
 	if (SUCCEEDED(g_pd3dDevice->BeginScene())) {
 		bg.draw();
 		g_pd3dDevice->EndScene();
@@ -186,7 +205,7 @@ static void drawStartupBG() {
 
 
 //ゲーム終了
-void GameMain::gameEnd() {
+void D3DBasicProcess::gameEnd() {
 	g_isGameEnd = true;
 }
 

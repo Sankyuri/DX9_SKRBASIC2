@@ -219,21 +219,21 @@ HRESULT ImagePolygon::copyVtx() {
 }
 
 
-HRESULT ImagePolygon::refer(ImageBase *a_obj) {
+HRESULT ImagePolygon::refer(ImageBase &a_obj) {
 	m_isDrawable = false;
-	if (NULL == a_obj->getTexture()) {
+	if (NULL == a_obj.getTexture()) {
 		Message(_T("空の画像を使用しようとしました"), _T("ImagePolygon::referTexture()"));
 		return E_FAIL;
 	}
-	a_obj->getTexture()->AddRef();
-	this->m_pReferTexture = a_obj; //同じものを指すようにする
+	a_obj.getTexture()->AddRef();
+	this->m_pReferTexture = &a_obj; //同じものを指すようにする
 	if (NULL == this->m_pReferTexture) {
 		Message(_T("画像の参照に失敗しました"), _T("Error"));
 		return E_FAIL;
 	}
 	HRESULT hr;
-	m_width  = a_obj->getImgWidth();
-	m_height = a_obj->getImgHeight();
+	m_width  = a_obj.getImgWidth();
+	m_height = a_obj.getImgHeight();
 	m_cpos   = D3DXVECTOR3(m_width / 2.0f, m_height / 2.0f, 0.0f); //画像の中心を初期化
 	//頂点/頂点バッファ生成
 	if (FAILED(hr = loadCreateVtx())) {
@@ -511,7 +511,7 @@ void ImagePolygon::move(float a_x, float a_y, float a_z) {
 	m_rcpos += D3DXVECTOR3(a_x, a_y, a_z); //    ↓
 	D3DXMatrixIdentity(&m_mtrxMove); //行列の初期化
 	D3DXMatrixTranslation(&m_mtrxMove, a_x, a_y, a_z); //変換行列を設定
-	matrixFinallyA(&m_mtrxMove); //座標変換
+	matrixFinallyA(m_mtrxMove); //座標変換
 	copyVtx(); //全て変換し終わったら頂点バッファに書き込み
 } //以下同じパターン
 
@@ -525,7 +525,7 @@ void ImagePolygon::scaling(float a_x, float a_y, float a_z) {
 	m_scale += D3DXVECTOR3(a_x, a_y, a_z);
 	D3DXMatrixIdentity(&m_mtrxScale);
 	D3DXMatrixScaling(&m_mtrxScale, 1.0f + a_x, 1.0f + a_y, 1.0f + a_z);
-	matrixFinallyB(&m_mtrxScale);
+	matrixFinallyB(m_mtrxScale);
 	copyVtx();
 }
 
@@ -550,38 +550,38 @@ void ImagePolygon::rotateX(float a_angleRad) {
 	m_angle.x += a_angleRad;
 	D3DXMatrixIdentity(&m_mtrxRotate);
 	D3DXMatrixRotationX(&m_mtrxRotate, a_angleRad);
-	matrixFinallyB(&m_mtrxRotate);
+	matrixFinallyB(m_mtrxRotate);
 	copyVtx();
 }
 void ImagePolygon::rotateY(float a_angleRad) {
 	m_angle.y += a_angleRad;
 	D3DXMatrixIdentity(&m_mtrxRotate);
 	D3DXMatrixRotationY(&m_mtrxRotate, a_angleRad);
-	matrixFinallyB(&m_mtrxRotate);
+	matrixFinallyB(m_mtrxRotate);
 	copyVtx();
 }
 void ImagePolygon::rotateZ(float a_angleRad) {
 	m_angle.z += a_angleRad;
 	D3DXMatrixIdentity(&m_mtrxRotate);
 	D3DXMatrixRotationZ(&m_mtrxRotate, a_angleRad);
-	matrixFinallyB(&m_mtrxRotate);
+	matrixFinallyB(m_mtrxRotate);
 	copyVtx();
 }
 
-void ImagePolygon::matrixFinallyA(D3DXMATRIX *a_matrix) {
+void ImagePolygon::matrixFinallyA(D3DXMATRIX &a_matrix) {
 	for (int vtxId = 0; vtxId < 4; ++vtxId) { //頂点毎に変換する必要がある(決め打ちの 4 は頂点数)
 		D3DXMatrixTranslation(&m_mtrxPos, m_vtx[vtxId].m_x, m_vtx[vtxId].m_y, m_vtx[vtxId].m_z); //変換行列を設定
-		m_mtrxPos *= *a_matrix; //行列を乗算
+		m_mtrxPos *= a_matrix; //行列を乗算
 		m_vtx[vtxId].m_x = m_mtrxPos._41; //変換後の座標を代入
 		m_vtx[vtxId].m_y = m_mtrxPos._42; //    ｜
 		m_vtx[vtxId].m_z = m_mtrxPos._43; //    ↓
 	}
 }
-void ImagePolygon::matrixFinallyB(D3DXMATRIX *a_matrix) {
+void ImagePolygon::matrixFinallyB(D3DXMATRIX &a_matrix) {
 	moveForMFB(-m_rcpos.x, -m_rcpos.y, -m_rcpos.z); //原点へ移動
 	for (int vtxId = 0; vtxId < 4; ++vtxId) { //for{}内はMFA()と同じ
 		D3DXMatrixTranslation(&m_mtrxPos, m_vtx[vtxId].m_x, m_vtx[vtxId].m_y, m_vtx[vtxId].m_z);
-		m_mtrxPos *= *a_matrix;
+		m_mtrxPos *= a_matrix;
 		m_vtx[vtxId].m_x = m_mtrxPos._41;
 		m_vtx[vtxId].m_y = m_mtrxPos._42;
 		m_vtx[vtxId].m_z = m_mtrxPos._43;
@@ -591,7 +591,7 @@ void ImagePolygon::matrixFinallyB(D3DXMATRIX *a_matrix) {
 void ImagePolygon::moveForMFB(float a_x, float a_y, float a_z) {
 	D3DXMatrixIdentity(&m_mtrxMove);
 	D3DXMatrixTranslation(&m_mtrxMove, a_x, a_y, a_z);
-	matrixFinallyA(&m_mtrxMove);
+	matrixFinallyA(m_mtrxMove);
 }
 
 void ImagePolygon::reset() {

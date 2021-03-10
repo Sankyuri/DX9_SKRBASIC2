@@ -60,10 +60,10 @@ namespace skrBasic {
 
 		//セットアップ(内部処理用)
 		HRESULT setFontInner(LPCTSTR a_fontName, int a_fontSize, bool a_isItalic,
-							 int a_weight, LPD3DXFONT *a_font);
+							 int a_weight, LPD3DXFONT &a_font);
 		//描画(内部処理用)
 		void    drawStringInner(LPCTSTR a_string, int a_x, int a_y, int a_format,
-							    D3DCOLOR a_color, LPD3DXFONT a_font);
+							    D3DCOLOR a_color, LPD3DXFONT &a_font);
 		
 
 	};

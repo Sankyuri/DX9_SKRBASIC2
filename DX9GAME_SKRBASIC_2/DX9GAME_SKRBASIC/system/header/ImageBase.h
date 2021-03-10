@@ -23,7 +23,7 @@ namespace skrBasic {
 		
 		//テクスチャを参照で使用する
 		//@param obj 参照したい ImageSprite のオブジェクト
-		virtual HRESULT refer(ImageBase *a_obj) = 0;
+		virtual HRESULT refer(ImageBase &a_obj) = 0;
 
 
 		//画像の幅を取得
@@ -134,7 +134,7 @@ namespace skrBasic {
 
 	private:
 		//角度が0の時のカーソルの相対位置( isMouseHover() 用)
-		POINT getRelativePoint(const POINT *a_curPos);
+		POINT getRelativePoint(const POINT &a_curPos);
 
 	};
 

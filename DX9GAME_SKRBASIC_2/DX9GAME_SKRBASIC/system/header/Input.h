@@ -84,24 +84,24 @@ namespace skrBasic {
 		//@param a_mousebutton マウスボタンID
 		//@param a_area 判定する範囲
 		//@return 押している間は true を返す
-		static bool isMouseInputInRange(MouseInput a_mousebutton, const RECT *a_area);
+		static bool isMouseInputInRange(MouseInput a_mousebutton, const RECT &a_area);
 
 		//特定範囲内でマウスボタンを押した瞬間か
 		//@param a_mousebutton マウスボタンID
 		//@param a_area 判定する範囲
 		//@return 押した瞬間は true を返す
-		static bool isMouseClickInRange(MouseInput a_mousebutton, const RECT *a_area);
+		static bool isMouseClickInRange(MouseInput a_mousebutton, const RECT &a_area);
 
 		//特定範囲内でのマウスボタンを離した瞬間か
 		//@param a_mousebutton マウスボタンID
 		//@param a_area 判定する範囲
 		//@return 離した瞬間は true を返す
-		static bool isMouseReleaseInRange(MouseInput a_mousebutton, const RECT *a_area);
+		static bool isMouseReleaseInRange(MouseInput a_mousebutton, const RECT &a_area);
 
 
 		//マウス(カーソル)が特定範囲内にあるか
 		//@param a_area 判定する範囲
-		static bool isMouseInRange(const RECT *a_area);
+		static bool isMouseInRange(const RECT &a_area);
 
 
 

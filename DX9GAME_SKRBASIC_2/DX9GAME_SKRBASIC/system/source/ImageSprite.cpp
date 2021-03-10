@@ -107,20 +107,20 @@ HRESULT ImageSprite::loadFromResource(int a_id,
 	return S_OK;
 }
 
-HRESULT ImageSprite::refer(ImageBase *a_obj) {
+HRESULT ImageSprite::refer(ImageBase &a_obj) {
 	m_isDrawable = false;
-	if (NULL == a_obj->getTexture()) {
+	if (NULL == a_obj.getTexture()) {
 		Message(_T("空の画像を使用しようとしました"), _T("ImageSprite::referTexture()"));
 		return E_FAIL;
 	}
-	a_obj->getTexture()->AddRef();
-	this->m_pReferTexture = a_obj; //同じものを指すようにする
+	a_obj.getTexture()->AddRef();
+	this->m_pReferTexture = &a_obj; //同じものを指すようにする
 	if (NULL == this->m_pReferTexture) {
 		Message(_T("画像の参照に失敗しました"), _T("Error"));
 		return E_FAIL;
 	}
-	this->m_width  = a_obj->getImgWidth();
-	this->m_height = a_obj->getImgHeight();
+	this->m_width  = a_obj.getImgWidth();
+	this->m_height = a_obj.getImgHeight();
 	m_cpos = D3DXVECTOR3((float)this->m_width / 2.0f,
 		                 (float)this->m_height / 2.0f, 0.0f); //画像の中心を初期化
 	m_isDrawable = true;
@@ -167,10 +167,10 @@ HRESULT ImageSprite::draw(const RECT *a_trimSize, D3DCOLOR a_color) {
 	return E_FAIL;
 }
 HRESULT ImageSprite::draw(const RECT *a_trimSize) {
-	return draw(a_trimSize, NULL);
+	return draw(a_trimSize, D3DCOLOR(0));
 }
 HRESULT ImageSprite::draw() {
-	return draw(nullptr, NULL);
+	return draw(nullptr, D3DCOLOR(0));
 }
 
 

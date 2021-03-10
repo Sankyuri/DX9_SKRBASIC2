@@ -11,10 +11,17 @@
 //ゲームメイン部分処理系統
 class GameMain : public skrBasic::D3DBasicProcess {
 public:
-	void gameEnd();  //ゲーム終了
+	// ゲーム初期化
+	// @return 処理が正常に成功した場合は ((HRESULT)(S_OK)) を返してください。
+	HRESULT init();
+	
+	//メインループ
+	// @return 処理が正常に成功した場合は ((HRESULT)(S_OK)) を返してください。
+	HRESULT main();
 
-	void init(); //ゲーム初期化
-	void main();     //メインループ
+	//BGM のループチェック
+	// @return 処理が正常に成功した場合は ((HRESULT)(S_OK)) を返してください。
+	HRESULT bgmLoop();
 
 
 private:

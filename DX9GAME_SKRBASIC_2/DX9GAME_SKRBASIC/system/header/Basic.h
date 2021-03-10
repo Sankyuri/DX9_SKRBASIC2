@@ -10,7 +10,7 @@
 LRESULT WINAPI MsgProc(HWND a_hWnd, UINT a_msg, WPARAM a_wParam, LPARAM a_lParam);
 
 //ウィンドウクラス設定
-void           InitWndClass(WNDCLASSEX *a_wc);
+void           InitWndClass(WNDCLASSEX &a_wc);
 
 //アスペクト比設定
 void           SetupMatrices();

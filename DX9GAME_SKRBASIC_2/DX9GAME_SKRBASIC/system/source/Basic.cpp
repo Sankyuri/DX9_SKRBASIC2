@@ -17,50 +17,50 @@ extern bool g_skipProcesses; //WinMain.cpp の処理スキップ用
 
 
 
-void InitWndClass(WNDCLASSEX *a_wc) {
-	a_wc->cbSize = sizeof(WNDCLASSEX);
-	a_wc->style = CS_CLASSDC;
-	a_wc->lpfnWndProc = (WNDPROC)MsgProc;
-	a_wc->cbClsExtra = 0;
-	a_wc->cbWndExtra = 0;
-	a_wc->hInstance = GetModuleHandle(NULL);
-	a_wc->hbrBackground = NULL;
-	a_wc->lpszMenuName = NULL;
-	a_wc->lpszClassName = g_className;
+void InitWndClass(WNDCLASSEX &a_wc) {
+	a_wc.cbSize = sizeof(WNDCLASSEX);
+	a_wc.style = CS_CLASSDC;
+	a_wc.lpfnWndProc = (WNDPROC)MsgProc;
+	a_wc.cbClsExtra = 0;
+	a_wc.cbWndExtra = 0;
+	a_wc.hInstance = GetModuleHandle(NULL);
+	a_wc.hbrBackground = NULL;
+	a_wc.lpszMenuName = NULL;
+	a_wc.lpszClassName = g_className;
 
 	//カーソル設定
 	#ifdef IDC_CURSOR1
-		a_wc->hCursor = LoadCursor(GetModuleHandle(NULL), MAKEINTRESOURCE(IDC_CURSOR1));
+		a_wc.hCursor = LoadCursor(GetModuleHandle(NULL), MAKEINTRESOURCE(IDC_CURSOR1));
 	#else
-		a_wc->hCursor = NULL;
+		a_wc.hCursor = NULL;
 	#endif
 
 	//アイコン設定
 	#ifdef _DEBUG
 		#ifdef IDI_ICON_D
-			a_wc->hIcon   = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON_D));
+			a_wc.hIcon   = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON_D));
 		#else
-			a_wc->hIcon   = NULL;
+			a_wc.hIcon   = NULL;
 		#endif
 		#ifdef IDI_ICON_SMALL_D
-			a_wc->hIconSm = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON_SMALL_D));
+			a_wc.hIconSm = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON_SMALL_D));
 		#else
-			a_wc->hIconSm = NULL;
+			a_wc.hIconSm = NULL;
 		#endif
 	#else
 		#ifdef IDI_ICON
-			a_wc->hIcon   = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON));
+			a_wc.hIcon   = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON));
 		#else
-			a_wc->hIcon   = NULL;
+			a_wc.hIcon   = NULL;
 		#endif
 		#ifdef IDI_ICON_SMALL
-			a_wc->hIconSm = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON_SMALL));
+			a_wc.hIconSm = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON_SMALL));
 		#else
-			a_wc->hIconSm = NULL;
+			a_wc.hIconSm = NULL;
 		#endif
 	#endif //大分汚いがこれで勘弁しておくれ……
 
-	RegisterClassEx(a_wc);
+	RegisterClassEx(&a_wc);
 }
 
 

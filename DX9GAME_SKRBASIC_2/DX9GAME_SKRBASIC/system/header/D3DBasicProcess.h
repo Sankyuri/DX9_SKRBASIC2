@@ -8,6 +8,10 @@ namespace skrBasic{
 	//
 	class D3DBasicProcess {
 	public:
+
+		//ゲームを終了する
+		void gameEnd();
+
 		//レンダリングターゲットをZバッファに戻す
 		//@return 
 		HRESULT resetRenderTarget();
@@ -24,7 +28,7 @@ namespace skrBasic{
 		void    initRenderState();
 
 		//簡易ウィンドウ生成
-		void    createWindowSimple(LPCTSTR a_wndName, int a_wndW, int a_wndH, WNDCLASSEX *a_wc);
+		void    createWindowSimple(LPCTSTR a_wndName, int a_wndW, int a_wndH, WNDCLASSEX &a_wc);
 
 		//gCount を 1 加算
 		void addGCount();

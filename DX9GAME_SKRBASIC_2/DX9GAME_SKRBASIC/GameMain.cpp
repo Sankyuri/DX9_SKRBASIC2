@@ -1,15 +1,23 @@
 ﻿#include "GameMain.h"
 
+
 void GameMain::init() {
 
-	//初期化処理
+	// ゲーム初期化処理
 
 
 }
 
 void GameMain::main() {
 
-	//メインループ
+	// メインループ処理
+
+
+}
+
+void GameMain::bgmLoop() {
+
+	// BGM のループチェック
 
 
 }

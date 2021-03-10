@@ -92,7 +92,7 @@ bool ImageBase::isMouseHoverOn() {
 		// 矩形を求める
 		if (isRotated()) { // 回転した矩形
 			SetRect(&imgRct, -hw, -hh, hw, hh);
-			curPos = getRelativePoint(&curPos);
+			curPos = getRelativePoint(curPos);
 		}
 		else { // 回転していない矩形
 			SetRect(&imgRct, m_pos.x - hw, m_pos.y - hh, m_pos.x + hw, m_pos.y + hh);
@@ -112,8 +112,8 @@ bool ImageBase::isMouseHoverOn() {
 }
 
 
-POINT ImageBase::getRelativePoint(const POINT *a_curPos) {
-	D3DXVECTOR3 tmpVec = D3DXVECTOR3(a_curPos->x, a_curPos->y, 0.0f) - m_pos;
+POINT ImageBase::getRelativePoint(const POINT &a_curPos) {
+	D3DXVECTOR3 tmpVec = D3DXVECTOR3(a_curPos.x, a_curPos.y, 0.0f) - m_pos;
 	float cf  = cosf(m_angle.z);
 	float sf  = sinf(m_angle.z);
 	POINT res = {

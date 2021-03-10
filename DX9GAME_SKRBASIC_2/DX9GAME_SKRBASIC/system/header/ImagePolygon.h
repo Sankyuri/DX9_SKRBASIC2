@@ -49,7 +49,7 @@ namespace skrBasic {
 
 		//テクスチャを参照で使用する
 		//@param a_obj 参照したい ImageSprite のオブジェクト
-		HRESULT refer(ImageBase *a_obj);
+		HRESULT refer(ImageBase &a_obj);
 
 		//画像を描画する
 		HRESULT draw();
@@ -216,8 +216,8 @@ namespace skrBasic {
 		//リソースからテクスチャ読み込み
 		HRESULT loadLoadTexRsc(int a_id, D3DCOLOR a_keyColor);
 
-		void    matrixFinallyA(D3DXMATRIX *a_mtrx);      //行列最終処理
-		void    matrixFinallyB(D3DXMATRIX *a_mtrx);      //原点に戻す処理を必要とする場合用
+		void    matrixFinallyA(D3DXMATRIX &a_mtrx);      //行列最終処理
+		void    matrixFinallyB(D3DXMATRIX &a_mtrx);      //原点に戻す処理を必要とする場合用
 		void    moveForMFB(float a_x, float a_y, float a_z); //MatrixFinallyB用移動関数
 
 

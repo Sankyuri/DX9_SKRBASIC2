@@ -6,17 +6,17 @@
 using namespace skrBasic;
 
 HRESULT FontSimple::setFont(LPCTSTR a_fontName, int a_fontSize, bool a_isItalic) {
-	if (FAILED(setFontInner(a_fontName, a_fontSize, a_isItalic, FW_NORMAL, &m_pFont))) {
+	if (FAILED(setFontInner(a_fontName, a_fontSize, a_isItalic, FW_NORMAL, m_pFont))) {
 		return E_FAIL;
 	}
 	return S_OK;
 }
 
 HRESULT FontSimple::setShadowedFont(LPCTSTR a_fontName, int a_fontSize, bool a_isItalic) {
-	if (FAILED(setFontInner(a_fontName, a_fontSize, a_isItalic, FW_NORMAL, &m_pFont))) {
+	if (FAILED(setFontInner(a_fontName, a_fontSize, a_isItalic, FW_NORMAL, m_pFont))) {
 		return E_FAIL;
 	}
-	if (FAILED(setFontInner(a_fontName, a_fontSize, a_isItalic, FW_NORMAL, &m_pFontShadow))) {
+	if (FAILED(setFontInner(a_fontName, a_fontSize, a_isItalic, FW_NORMAL, m_pFontShadow))) {
 		return E_FAIL;
 	}
 	return S_OK;
@@ -30,7 +30,7 @@ HRESULT FontSimple::setBorderedFont(LPCTSTR a_fontName, int a_fontSize, bool a_i
 }
 
 HRESULT FontSimple::setFontInner(LPCTSTR a_fontName, int a_fontSize, bool a_isItalic,
-	                             int a_weight, LPD3DXFONT *a_font)
+	                             int a_weight, LPD3DXFONT &a_font)
 {
 	HRESULT hr = D3DXCreateFont(
 		g_pd3dDevice,
@@ -44,7 +44,7 @@ HRESULT FontSimple::setFontInner(LPCTSTR a_fontName, int a_fontSize, bool a_isIt
 		ANTIALIASED_QUALITY,
 		FIXED_PITCH | FF_DONTCARE,
 		a_fontName, // _T("‚l‚r@ƒSƒVƒbƒN") ‚È‚Ç
-		a_font
+		&a_font
 		);
 	if (FAILED(hr)) {
 		Message(_T("ƒtƒHƒ“ƒg‚Ì‰Šú‰»‚ÉŽ¸”s‚µ‚Ü‚µ‚½"), _T("Error"));
@@ -76,7 +76,7 @@ void FontSimple::drawStringEx(LPCTSTR a_string, int a_x, int a_y, int a_format, 
 	}
 }
 
-void FontSimple::drawStringInner(LPCTSTR a_string, int a_x, int a_y, int a_format, D3DCOLOR a_color, LPD3DXFONT a_font) {
+void FontSimple::drawStringInner(LPCTSTR a_string, int a_x, int a_y, int a_format, D3DCOLOR a_color, LPD3DXFONT &a_font) {
 	if (m_isDrawable) {
 		RECT rc = { a_x, a_y };
 		a_font->DrawText(NULL, a_string, -1, &rc, DT_CALCRECT, NULL);

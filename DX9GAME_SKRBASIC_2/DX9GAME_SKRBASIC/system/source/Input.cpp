@@ -412,17 +412,17 @@ bool Input::isMouseRelease(MouseInput a_mousebutton) {
 	return false;
 }
 
-bool Input::isMouseInputInRange(MouseInput a_mousebutton, const RECT *a_area) {
+bool Input::isMouseInputInRange(MouseInput a_mousebutton, const RECT &a_area) {
 	return ((m_mousestate.rgbButtons[static_cast<UINT>(a_mousebutton)] & BUTTON_ON_FLUG) &&
-			a_area->left <= m_mousePt.x && a_area->right  > m_mousePt.x                  &&
-			a_area->top  <= m_mousePt.y && a_area->bottom > m_mousePt.y);
+			a_area.left <= m_mousePt.x && a_area.right  > m_mousePt.x                    &&
+			a_area.top  <= m_mousePt.y && a_area.bottom > m_mousePt.y);
 }
 
-bool Input::isMouseClickInRange(MouseInput a_mousebutton, const RECT *a_area) {
+bool Input::isMouseClickInRange(MouseInput a_mousebutton, const RECT &a_area) {
 	UINT mousebutton = static_cast<UINT>(a_mousebutton);
-	if (m_mousestate.rgbButtons[mousebutton] & BUTTON_ON_FLUG &&
-		a_area->left <= m_mousePt.x && a_area->right  > m_mousePt.x &&
-		a_area->top  <= m_mousePt.y && a_area->bottom > m_mousePt.y)
+	if (m_mousestate.rgbButtons[mousebutton] & BUTTON_ON_FLUG     &&
+		a_area.left <= m_mousePt.x && a_area.right  > m_mousePt.x &&
+		a_area.top  <= m_mousePt.y && a_area.bottom > m_mousePt.y)
 	{
 		if (not m_wasClick[mousebutton]) {
 			m_wasClick[mousebutton] = true;
@@ -435,11 +435,11 @@ bool Input::isMouseClickInRange(MouseInput a_mousebutton, const RECT *a_area) {
 	return false;
 }
 
-bool Input::isMouseReleaseInRange(MouseInput a_mousebutton, const RECT *a_area) {
+bool Input::isMouseReleaseInRange(MouseInput a_mousebutton, const RECT &a_area) {
 	UINT mousebutton = static_cast<UINT>(a_mousebutton);
-	if (m_mousestate.rgbButtons[mousebutton] & BUTTON_ON_FLUG &&
-		a_area->left <= m_mousePt.x && a_area->right  > m_mousePt.x &&
-		a_area->top  <= m_mousePt.y && a_area->bottom > m_mousePt.y)
+	if (m_mousestate.rgbButtons[mousebutton] & BUTTON_ON_FLUG     &&
+		a_area.left <= m_mousePt.x && a_area.right  > m_mousePt.x &&
+		a_area.top  <= m_mousePt.y && a_area.bottom > m_mousePt.y)
 	{
 		if (not m_wasClick[mousebutton]) {
 			m_wasClick[mousebutton] = true;
@@ -453,9 +453,9 @@ bool Input::isMouseReleaseInRange(MouseInput a_mousebutton, const RECT *a_area) 
 }
 
 
-bool Input::isMouseInRange(const RECT *a_area) {
-	return (a_area->left <= m_mousePt.x && a_area->right  > m_mousePt.x &&
-			a_area->top  <= m_mousePt.y && a_area->bottom > m_mousePt.y);
+bool Input::isMouseInRange(const RECT &a_area) {
+	return (a_area.left <= m_mousePt.x && a_area.right  > m_mousePt.x &&
+			a_area.top  <= m_mousePt.y && a_area.bottom > m_mousePt.y);
 }
 
 

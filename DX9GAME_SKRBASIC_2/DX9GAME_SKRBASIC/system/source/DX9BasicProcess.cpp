@@ -55,13 +55,13 @@ HRESULT D3DBasicProcess::initD3D(HWND a_hWnd) {
 	return S_OK;
 }
 
-void D3DBasicProcess::createWindowSimple(LPCTSTR a_wndName, int a_wndW, int a_wndH, WNDCLASSEX *a_wc) {
+void D3DBasicProcess::createWindowSimple(LPCTSTR a_wndName, int a_wndW, int a_wndH, WNDCLASSEX &a_wc) {
 	D3DDISPLAYMODE disppos;
 	g_pD3D = Direct3DCreate9(D3D_SDK_VERSION);
 	g_pD3D->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &disppos);
 	g_hWnd = CreateWindow(g_className, a_wndName, WINDOW_SETTING,
 		                CW_USEDEFAULT, CW_USEDEFAULT,
-		                a_wndW, a_wndH, NULL, NULL, a_wc->hInstance, NULL);
+		                a_wndW, a_wndH, NULL, NULL, a_wc.hInstance, NULL);
 }
 
 void D3DBasicProcess::initRenderState() {

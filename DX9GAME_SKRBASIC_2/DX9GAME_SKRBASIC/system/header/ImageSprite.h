@@ -49,16 +49,16 @@ namespace skrBasic {
 
 		//テクスチャを参照で使用する
 		//@param a_obj 参照したい ImageSprite のオブジェクト
-		HRESULT refer(ImageBase *a_obj);
+		HRESULT refer(ImageBase &a_obj);
 
 
 		//画像を描画する
-		//@param a_trimSize トリミングする領域(px)
+		//@param a_trimSize トリミングする領域(px) : nullptr 可能
 		//@param a_color 描画色
 		HRESULT draw(const RECT *a_trimSize, D3DCOLOR a_color);
 
 		//画像を描画する
-		//@param a_trimSize トリミングする領域(px)
+		//@param a_trimSize トリミングする領域(px) : nullptr 可能
 		HRESULT draw(const RECT *a_trimSize);
 
 		//画像を描画する
