@@ -100,6 +100,12 @@ namespace skrBasic {
 
 
 
+		//テクスチャ解放(これを実行した場合、再度読み込むまで再生不可)
+		virtual void release();
+
+
+
+
 		ImageBase();
 		virtual ~ImageBase();
 

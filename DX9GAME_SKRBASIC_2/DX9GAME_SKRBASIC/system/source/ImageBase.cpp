@@ -153,11 +153,23 @@ bool ImageBase::isSomeMouseOn() {
 
 
 
+void ImageBase::release() {
+	if (m_isDrawable) {
+		SafeRelease(m_ppTexture);
+		m_pReferTexture = nullptr;
+		m_isDrawable    = false;
+	}
+}
+
+
+
+
 ImageBase::ImageBase() :
 	m_pos(D3DXVECTOR3(0.0f, 0.0f, 0.0f)),
 	m_cpos(D3DXVECTOR3(0.0f, 0.0f, 0.0f)),
 	m_scale(D3DXVECTOR3(1.0f, 1.0f, 1.0f)),
 	m_angle(D3DXVECTOR3(0.0f, 0.0f, 0.0f)),
+	m_blendMode(D3DBLEND_INVSRCALPHA),
 	m_pReferTexture(nullptr),
 	m_ppTexture(nullptr)
 {

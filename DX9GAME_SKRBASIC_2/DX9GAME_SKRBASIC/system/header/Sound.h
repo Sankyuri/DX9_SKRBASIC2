@@ -50,8 +50,8 @@ namespace skrBasic {
 		void stop();
 
 
-		//音声削除(これを実行した場合、再度読み込むまで再生不可)
-		void deleteSound();
+		//音声解放(これを実行した場合、再度読み込むまで再生不可)
+		void release();
 
 		//指定したループスタートでループさせる為の関数。毎フレーム実行させる必要がある
 		void checkBGMLoop();

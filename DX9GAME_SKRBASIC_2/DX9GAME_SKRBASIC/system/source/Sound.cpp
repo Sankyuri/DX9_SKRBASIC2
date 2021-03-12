@@ -344,14 +344,14 @@ void Sound::stop() {
 	}
 }
 
-void Sound::deleteSound() {
-	if (m_isPlayable) {
-		SafeRelease(m_pDSSecBuf);
-		SafeDeleteArray(m_pData);
-		m_isPlaying  = false;
-		m_isPlayable = false;
-	}
+void Sound::release() {
+	m_pDSSecBuf->Stop();
+	SafeRelease(m_pDSSecBuf);
+	SafeDeleteArray(m_pData);
+	m_isPlaying  = false;
+	m_isPlayable = false;
 }
+
 
 void Sound::checkBGMLoop() {
 	if (m_useCustomLoop){
@@ -378,6 +378,7 @@ Sound::Sound() :
 	m_wavfmtex{0},
 	m_hMmio(nullptr),
 	m_pData(nullptr),
+	m_pDSSecBuf(nullptr),
 	m_isPlaying(false),
 	m_isPlayable(false),
 	m_loopEndPos(0),
