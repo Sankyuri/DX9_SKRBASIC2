@@ -132,7 +132,22 @@ Sound::loadFromMemory(...) の引数を修正。
 
 
 
+		2021/03/10 v2.3
+*GameMain::GameEnd() を D3DBasicProcess へ移動。
++GameMain に bgmLoop() を追加。
+*GameMain の関数の戻り値を void から HRESULT に変更。
+*メンバ関数の引数で、ポインタのものは参照に変更。
 
+
+
+
+		2021/03/10 v2.31
+*ImageBase::m_blendMode が初期化されていなかったミスを修正。
+*Sound に以下の変更。
+	*deleteSound() を release() に改名。
+	*release() が再生可能状態でなくとも実行されるように変更。
+	*m_pDSSecBuf が初期化されていなかったミスを修正。
++ImageBase にも release() を追加。
 
 
 
