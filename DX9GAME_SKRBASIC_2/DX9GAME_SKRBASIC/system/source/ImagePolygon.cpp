@@ -2,6 +2,7 @@
 #include "..\header\Basic.h"
 #include "..\header\systemExtern.h"
 #include "..\header\ImagePolygon.h"
+#include "..\..\GameMain.h"
 
 using namespace skrBasic;
 
@@ -103,6 +104,10 @@ HRESULT ImagePolygon::loadCommon(DWORD a_width, DWORD a_height)
 }
 
 HRESULT ImagePolygon::loadCreateVtx() {
+	// 頂点バッファ作成済みなら何もしない
+	if (nullptr != m_ppVtxBuf) {
+		return S_OK;
+	}
 	HRESULT hr;
 	//
 	//  0 __ 1
@@ -253,32 +258,24 @@ HRESULT ImagePolygon::draw() {
 		return E_FAIL;
 	}
 
+	copyVtx(); // 頂点バッファコピー
+
 	D3DXVECTOR3 DrPos = D3DXVECTOR3(0, 0, 0);
-	if (m_blendMode != D3DBLEND_INVSRCALPHA) {
-		g_pd3dDevice->SetRenderState(D3DRS_DESTBLEND, m_blendMode);
-	}
-	if (m_sampleModeU != D3DTADDRESS_WRAP) {
-		g_pd3dDevice->SetSamplerState(0, D3DSAMP_ADDRESSU, m_sampleModeU);
-	}
-	if (m_sampleModeV != D3DTADDRESS_WRAP) {
-		g_pd3dDevice->SetSamplerState(0, D3DSAMP_ADDRESSV, m_sampleModeU);
-	}
-	if (FAILED(drawSetTex()) ||
-		FAILED(g_pd3dDevice->SetFVF(FVF_SETTING)) ||
-		FAILED(g_pd3dDevice->SetStreamSource(0, m_ppVtxBuf, 0, sizeof(VERTEX_2D))) ||
-		FAILED(g_pd3dDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2)))
+	if (FAILED(g_pd3dDevice->SetRenderState(
+				D3DRS_DESTBLEND,     m_blendMode  ))  ||
+		FAILED(g_pd3dDevice->SetSamplerState(
+				0, D3DSAMP_ADDRESSU, m_sampleModeU))  ||
+		FAILED(g_pd3dDevice->SetSamplerState(
+				0, D3DSAMP_ADDRESSV, m_sampleModeU))  ||
+		FAILED(drawSetTex())                          ||
+		FAILED(g_pd3dDevice->SetFVF(FVF_SETTING))     ||
+		FAILED(g_pd3dDevice->SetStreamSource(
+				0, m_ppVtxBuf, 0, sizeof(VERTEX_2D))) ||
+		FAILED(g_pd3dDevice->DrawPrimitive(
+				D3DPT_TRIANGLESTRIP, 0, 2))           )
 	{
 		Message(_T("画像の表示に失敗しました"), _T("Error"));
 		m_isDrawable = false;
-	}
-	if (m_blendMode != D3DBLEND_INVSRCALPHA) {
-		g_pd3dDevice->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-	}
-	if (m_sampleModeU != D3DTADDRESS_WRAP) {
-		g_pd3dDevice->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
-	}
-	if (m_sampleModeV != D3DTADDRESS_WRAP) {
-		g_pd3dDevice->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
 	}
 	if (m_isDrawable) {
 		return S_OK;
@@ -287,16 +284,9 @@ HRESULT ImagePolygon::draw() {
 }
 HRESULT ImagePolygon::drawSetTex() {
 	if (NULL == m_pReferTexture) {
-		if (FAILED(g_pd3dDevice->SetTexture(0, m_ppTexture))) {
-			return E_FAIL;
-		}
+		return g_pd3dDevice->SetTexture(0, m_ppTexture);
 	}
-	else {
-		if (FAILED(g_pd3dDevice->SetTexture(0, m_pReferTexture->getTexture()))) {
-			return E_FAIL;
-		}
-	}
-	return S_OK;
+	return g_pd3dDevice->SetTexture(0, m_pReferTexture->getTexture());
 }
 
 
@@ -376,6 +366,49 @@ HRESULT ImagePolygon::setRenderTarget(D3DCOLOR a_clearColor) {
 }
 
 
+HRESULT ImagePolygon::createEmptySurface(DWORD a_width, DWORD a_height) {
+	HRESULT hr;
+
+	m_width  = a_width;  //幅設定
+	m_height = a_height; //高さ設定
+	m_cpos   = D3DXVECTOR3(m_width / 2.0f, m_height / 2.0f, 0.0f); //画像の中心を初期化
+
+	//頂点/頂点バッファ生成
+	if (FAILED(hr = loadCreateVtx())) {
+		return E_FAIL;
+	}
+
+	//頂点データコピー
+	if (FAILED(hr = copyVtx())) {
+		Message(_T("頂点バッファに書き込めませんでした"), _T("Error"));
+		return hr;
+	}
+
+	//空テクスチャ生成
+	if (FAILED(g_pd3dDevice->CreateRenderTarget(
+			m_width, m_height, D3DFMT_X8R8G8B8, D3DMULTISAMPLE_NONE,
+			0, TRUE, &m_rtSurf, NULL)))
+	{
+		Message(_T("空テクスチャのインターフェース取得に失敗しました"),
+				_T("Error:ImagePolygon::createEmptyTexture()"));
+		m_isDrawable = false; //失敗した時は描画処理をしなくする
+		return E_FAIL;
+	}
+
+	m_isDrawable = true;
+	return S_OK;
+}
+
+HRESULT ImagePolygon::copyFromBackBaffer(GameMain &main) {
+	LPDIRECT3DSURFACE9 pBackBuf = nullptr;
+	g_pd3dDevice->GetRenderTarget(0, &pBackBuf);
+	HRESULT hr = g_pd3dDevice->StretchRect(
+			pBackBuf, NULL, m_rtSurf, NULL, D3DTEXF_LINEAR);
+//	pBackBuf->Release();
+	return hr;
+}
+
+
 
 
 void ImagePolygon::trim(float a_left , float a_top,
@@ -394,7 +427,6 @@ void ImagePolygon::trim(float a_left , float a_top,
 	m_vtx[3].m_y = m_vtx[0].m_y + a_height;
 	m_vtx[3].m_u = a_right;
 	m_vtx[3].m_v = a_bottom;
-	copyVtx();
 }
 
 void ImagePolygon::trim(float a_left , float a_top,
@@ -408,7 +440,6 @@ void ImagePolygon::trim(float a_left , float a_top,
 	m_vtx[2].m_v = a_bottom;
 	m_vtx[3].m_u = a_right;
 	m_vtx[3].m_v = a_bottom;
-	copyVtx();
 }
 
 void ImagePolygon::resize(float a_width, float a_height)
@@ -425,7 +456,6 @@ void ImagePolygon::resize(float a_width, float a_height)
 //	m_vtx[2].m_y = m_cpos.y + hh;
 //	m_vtx[3].m_x = m_vtx[1].m_x;
 //	m_vtx[3].m_y = m_vtx[2].m_y;
-//	copyVtx();
 //	trim(m_pos.x - hw, m_pos.y - hh,
 //		 m_pos.x + hw, m_pos.y + hh,
 //		 a_width, a_height);
@@ -438,7 +468,6 @@ void ImagePolygon::setDrawColor(D3DCOLOR a_color) {
 	m_vtx[1].m_color = a_color;
 	m_vtx[2].m_color = a_color;
 	m_vtx[3].m_color = a_color;
-	copyVtx();
 }
 
 
@@ -512,7 +541,6 @@ void ImagePolygon::move(float a_x, float a_y, float a_z) {
 	D3DXMatrixIdentity(&m_mtrxMove); //行列の初期化
 	D3DXMatrixTranslation(&m_mtrxMove, a_x, a_y, a_z); //変換行列を設定
 	matrixFinallyA(m_mtrxMove); //座標変換
-	copyVtx(); //全て変換し終わったら頂点バッファに書き込み
 } //以下同じパターン
 
 void ImagePolygon::scaling(float a_size) {
@@ -526,7 +554,6 @@ void ImagePolygon::scaling(float a_x, float a_y, float a_z) {
 	D3DXMatrixIdentity(&m_mtrxScale);
 	D3DXMatrixScaling(&m_mtrxScale, 1.0f + a_x, 1.0f + a_y, 1.0f + a_z);
 	matrixFinallyB(m_mtrxScale);
-	copyVtx();
 }
 
 void ImagePolygon::rotate(float a_angleRad) {
@@ -551,21 +578,18 @@ void ImagePolygon::rotateX(float a_angleRad) {
 	D3DXMatrixIdentity(&m_mtrxRotate);
 	D3DXMatrixRotationX(&m_mtrxRotate, a_angleRad);
 	matrixFinallyB(m_mtrxRotate);
-	copyVtx();
 }
 void ImagePolygon::rotateY(float a_angleRad) {
 	m_angle.y += a_angleRad;
 	D3DXMatrixIdentity(&m_mtrxRotate);
 	D3DXMatrixRotationY(&m_mtrxRotate, a_angleRad);
 	matrixFinallyB(m_mtrxRotate);
-	copyVtx();
 }
 void ImagePolygon::rotateZ(float a_angleRad) {
 	m_angle.z += a_angleRad;
 	D3DXMatrixIdentity(&m_mtrxRotate);
 	D3DXMatrixRotationZ(&m_mtrxRotate, a_angleRad);
 	matrixFinallyB(m_mtrxRotate);
-	copyVtx();
 }
 
 void ImagePolygon::matrixFinallyA(D3DXMATRIX &a_matrix) {
@@ -579,13 +603,7 @@ void ImagePolygon::matrixFinallyA(D3DXMATRIX &a_matrix) {
 }
 void ImagePolygon::matrixFinallyB(D3DXMATRIX &a_matrix) {
 	moveForMFB(-m_rcpos.x, -m_rcpos.y, -m_rcpos.z); //原点へ移動
-	for (int vtxId = 0; vtxId < 4; ++vtxId) { //for{}内はMFA()と同じ
-		D3DXMatrixTranslation(&m_mtrxPos, m_vtx[vtxId].m_x, m_vtx[vtxId].m_y, m_vtx[vtxId].m_z);
-		m_mtrxPos *= a_matrix;
-		m_vtx[vtxId].m_x = m_mtrxPos._41;
-		m_vtx[vtxId].m_y = m_mtrxPos._42;
-		m_vtx[vtxId].m_z = m_mtrxPos._43;
-	}
+	matrixFinallyA(a_matrix);
 	moveForMFB(m_rcpos.x, m_rcpos.y, m_rcpos.z); //元の位置へ移動
 }
 void ImagePolygon::moveForMFB(float a_x, float a_y, float a_z) {
@@ -613,7 +631,6 @@ void ImagePolygon::reset() {
 	m_vtx[3].m_x =  nx  ;
 	m_vtx[3].m_y =  ny  ;
 	m_vtx[3].m_z =  0.0f;
-	copyVtx();
 }
 
 void ImagePolygon::resetScale() {
@@ -632,7 +649,6 @@ void ImagePolygon::resetScale() {
 	m_vtx[3].m_y = m_rcpos.y + (ny   - m_scale.y);
 	m_vtx[3].m_z = m_rcpos.z + (1.0f - m_scale.z);
 	m_scale = D3DXVECTOR3(1.0f, 1.0f, 1.0f);
-	copyVtx();
 }
 
 void ImagePolygon::resetAngle() {
@@ -663,21 +679,40 @@ void ImagePolygon::moveUV(float a_u, float a_v) {
 	m_vtx[2].m_v += a_v;
 	m_vtx[3].m_u += a_u;
 	m_vtx[3].m_v += a_v;
-	copyVtx();
 }
 void ImagePolygon::moveU(float a_u) {
 	m_vtx[0].m_u += a_u;
 	m_vtx[1].m_u += a_u;
 	m_vtx[2].m_u += a_u;
 	m_vtx[3].m_u += a_u;
-	copyVtx();
 }
 void ImagePolygon::moveV(float a_v) {
 	m_vtx[0].m_v += a_v;
 	m_vtx[1].m_v += a_v;
 	m_vtx[2].m_v += a_v;
 	m_vtx[3].m_v += a_v;
-	copyVtx();
+}
+
+void ImagePolygon::setUV(float a_u, float a_v) {
+	m_vtx[0].m_u = a_u;
+	m_vtx[0].m_v = a_v;
+	m_vtx[1].m_u = a_u;
+	m_vtx[1].m_v = a_v;
+	m_vtx[2].m_u = a_u;
+	m_vtx[2].m_v = a_v;
+	m_vtx[3].m_u = a_u;
+	m_vtx[3].m_v = a_v;
+}
+
+void ImagePolygon::resetUV() {
+	m_vtx[0].m_u =
+	m_vtx[0].m_v =
+	m_vtx[1].m_u =
+	m_vtx[1].m_v =
+	m_vtx[2].m_u =
+	m_vtx[2].m_v =
+	m_vtx[3].m_u =
+	m_vtx[3].m_v = 0.0f;
 }
 
 
@@ -691,7 +726,8 @@ ImagePolygon::ImagePolygon() :
 	m_rcpos(D3DXVECTOR3(0.0f, 0.0f, 0.0f)),
 	m_sampleModeU(D3DTADDRESS_WRAP),
 	m_sampleModeV(D3DTADDRESS_WRAP),
-	m_pVtx(nullptr)
+	m_pVtx(nullptr),
+	m_vtx()
 {
 	D3DXMatrixIdentity(&m_mtrxPos);
 }

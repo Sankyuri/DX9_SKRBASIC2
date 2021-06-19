@@ -152,6 +152,40 @@ Sound::loadFromMemory(...) の引数を修正。
 
 
 
+		2021/03/10 v2.35
+ImagePolygon に 以下の変更。
+	+ copyFromBackBaffer() を追加。
+	* 頂点バッファを作りすぎるバグを loadCreateVtx() で修正。
+	* 変換関数の copyVtx() の実行を draw() に集約。
+	* draw() の大量の if(){} を削除。描画前に毎回 D3DDevice の
+	  セッタが実行されるように変更。
+	* drawSetTex() を若干最適化。
+	* matrixFinallyB(1) の matrixFinallyA() と共通の部分を
+	  何故かほったらかしていたので、それを呼び出すように変更。
+	+ setUV(2), resetUV() を追加。
+	
+Sound に 以下の変更。
+	* 識別子の違反を修正。
+	Sound を特定のフォーマット以外も読み込めるように以下の変更。
+		& dSoundCreateSecondaryBuffer(2) の引数1を
+		  DWORD から WAVEFORMATEX に変更。
+		* dSoundCreateSecondaryBuffer(2) の処理を
+		  ファイルのフォーマットに依存するように変更。
+		& loadFromMemory(-) の引数を3つ追加。
+		& loadFromMemory(-) の引数を3つ追加。
+* Input::isJoypadPush(1) の良く分からないバグを修正。
+& SystemParam の関数を static inline constexpr const に変更。
+& SystemParams を SystemParamSetting に変更。
+> SystemParam のメンバを SystemParamSetting に移動。
+&<SystemParam は SystemParamSetting を継承するように変更。
+- SystemParam.cpp を削除。
++ SystemParam に SKRB_VER, getSKRBasicVersion() を追加。
+
+
+
+
+
+
 
 
 

@@ -14,7 +14,7 @@ namespace skrBasic {
 		//@param a_pSrcFile  .wav ファイルのファイル名
 		//@param a_loopStart ループ範囲開始時間(ms)
 		//@param a_loopEnd   ループ範囲終了時間(ms)
-		HRESULT load(LPCTSTR a_pSrcFile, DWORD a_loopStart = 0L, DWORD a_loopEnd = 0L);
+		HRESULT load(LPCTSTR a_pSrcFile, DWORD a_loopStart = 0, DWORD a_loopEnd = 0);
 
 		//wavデータをリソースファイルからロード
 		//サンプリングレートはプライマリバッファのものと見做す
@@ -23,8 +23,12 @@ namespace skrBasic {
 		//@param a_offset    波形データ開始迄のオフセット
 		//@param a_loopStart ループ範囲開始時間 [ms]
 		//@param a_loopEnd   ループ範囲終了時間 [ms]
-		HRESULT loadFromResourceFile(LPCTSTR a_pSrcFile, DWORD a_sizeByte, DWORD a_offset,
-									 DWORD a_loopStart = 0L, DWORD a_loopEnd = 0L);
+		//@param a_late      サンプリングレート
+		//@param a_ch        チャンネル数
+		//@param a_bps       1サンプルのビット数
+		HRESULT loadFromResourceFile(LPCTSTR a_pSrcFile,    DWORD a_sizeByte,    DWORD a_offset,
+									 DWORD a_loopStart = 0, DWORD a_loopEnd = 0,
+									 DWORD a_late      = 0, WORD a_ch       = 2, WORD a_bps = 16);
 
 		//wavデータをメモリからロード
 		//サンプリングレートはプライマリバッファのものと見做す
@@ -33,8 +37,12 @@ namespace skrBasic {
 		//@param a_offset    波形データ開始迄のオフセット
 		//@param a_loopStart ループ範囲開始時間 [ms]
 		//@param a_loopEnd   ループ範囲終了時間 [ms]
-		HRESULT loadFromMemory(const BYTE a_data[], DWORD a_sizeByte, DWORD a_offset,
-							   DWORD a_loopStart = 0L, DWORD a_loopEnd = 0L);
+		//@param a_late      サンプリングレート
+		//@param a_ch        チャンネル数
+		//@param a_bps       1サンプルのビット数
+		HRESULT loadFromMemory(const BYTE a_data[],   DWORD a_sizeByte,    DWORD a_offset,
+							   DWORD a_loopStart = 0, DWORD a_loopEnd = 0,
+							   DWORD a_late      = 0, WORD  a_ch      = 2, WORD  a_bps = 16);
 
 		
 		//音声再生(ループ)
@@ -81,6 +89,7 @@ namespace skrBasic {
 		bool  m_wasBGMLooped;  //BGM専用:ループしたか(厳密にはそうじゃ無い)
 		bool  m_useCustomLoop; //ループを特定範囲内で行うか
 		DWORD m_loopStartPos, m_loopEndPos;    //ループスタート地点、ループエンド地点
+
 
 		HRESULT dSoundCreateSecondaryBuffer(DWORD a_rate, float a_lengthSec); //セカンダリバッファの作成
 

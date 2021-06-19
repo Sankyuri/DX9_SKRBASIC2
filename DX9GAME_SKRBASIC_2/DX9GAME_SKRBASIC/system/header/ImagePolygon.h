@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "ImageBase.h"
 
+class GameMain;
+
 namespace skrBasic {
 
 	//
@@ -59,6 +61,12 @@ namespace skrBasic {
 		
 		//レンダリングターゲットを変更する
 		HRESULT setRenderTarget(D3DCOLOR a_clearColor);
+
+		//空のサーフェイスを作成する
+		HRESULT createEmptySurface(DWORD a_width, DWORD a_height);
+
+		//バックバッファのデータをテクスチャにコピーする
+		HRESULT copyFromBackBaffer(GameMain &main);
 
 		//テクスチャを矩形切り取りし、リサイズする
 		void  trim(float a_left, float a_top,
@@ -154,6 +162,9 @@ namespace skrBasic {
 		//回転(Rad)
 		void  rotate(Axis a_axis, float a_angleRad);
 		
+		//テクスチャ座標を設定
+		void  setUV(float a_u, float a_v);
+		
 		//テクスチャ座標を移動する
 		void  moveUV(float a_u, float a_v);
 		
@@ -162,6 +173,7 @@ namespace skrBasic {
 		
 		//テクスチャ座標を移動する(vのみ)
 		void  moveV(float a_v);
+
 
 		//座標、スケール、角度の全てをリセットする
 		void  reset();
@@ -180,6 +192,9 @@ namespace skrBasic {
 		
 		//z軸回転角度をリセットする
 		void  resetAngleZ();
+		
+		//テクスチャ座標をリセットする
+		void  resetUV();
 
 
 

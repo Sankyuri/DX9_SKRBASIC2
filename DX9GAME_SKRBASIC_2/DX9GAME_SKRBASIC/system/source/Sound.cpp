@@ -6,13 +6,17 @@
 
 using namespace skrBasic;
 
-#define __PBUF_FLAG ( DSBCAPS_CTRLVOLUME    | \
-					  DSBCAPS_STICKYFOCUS   | \
-					  DSBCAPS_PRIMARYBUFFER)
-#define __SBUF_FLAG ( DSBCAPS_GETCURRENTPOSITION2 | \
-					  DSBCAPS_STATIC              | \
-					  DSBCAPS_STICKYFOCUS         | \
-					  DSBCAPS_CTRLVOLUME)
+
+#define SKRB_PBUF_FLAG ( DSBCAPS_CTRLVOLUME          | \
+						 DSBCAPS_STICKYFOCUS         | \
+						 DSBCAPS_PRIMARYBUFFER )
+
+#define SKRB_SBUF_FLAG ( DSBCAPS_GETCURRENTPOSITION2 | \
+						 DSBCAPS_STATIC              | \
+						 DSBCAPS_STICKYFOCUS         | \
+						 DSBCAPS_CTRLVOLUME )
+
+
 
 static HRESULT InitDSBufBuffer();
 static HRESULT InitDSBufFmtWave(DWORD a_samplingRate);
@@ -34,11 +38,11 @@ void InitDSound(DWORD a_samplingRate){
 //プライマリバッファの設定
 static HRESULT InitDSBufBuffer() {
 	HRESULT hr;
-	DSBUFFERDESC pDSDesc = { 0 };
-	pDSDesc.dwSize = sizeof(DSBUFFERDESC);
-	pDSDesc.dwFlags = __PBUF_FLAG;
+	DSBUFFERDESC pDSDesc  = { 0 };
+	pDSDesc.dwSize        = sizeof(DSBUFFERDESC);
+	pDSDesc.dwFlags       = SKRB_PBUF_FLAG;
 	pDSDesc.dwBufferBytes = 0;
-	pDSDesc.lpwfxFormat = NULL;
+	pDSDesc.lpwfxFormat   = NULL;
 	if (FAILED(hr = g_pDSound->CreateSoundBuffer(&pDSDesc, &g_pDSBuf, NULL))) {
 		Message(_T("プライマリサウンドバッファの生成に失敗しました"), _T("Error"));
 		return E_FAIL;
@@ -69,22 +73,13 @@ static HRESULT InitDSBufFmtWave(DWORD a_samplingRate) {
 
 HRESULT Sound::dSoundCreateSecondaryBuffer(DWORD a_rate, float a_lengthSec) {
 	HRESULT hr;
-	WAVEFORMATEX        tmpWavFmt = { 0 };
 	DSBUFFERDESC        tmpDesc   = { 0 };
 	LPDIRECTSOUNDBUFFER ptmpBuf   = nullptr;
 
-	tmpWavFmt.cbSize          = sizeof(WAVEFORMATEX);
-	tmpWavFmt.wFormatTag      = WAVE_FORMAT_PCM;
-	tmpWavFmt.nChannels       = 2;    //チャンネル数
-	tmpWavFmt.nSamplesPerSec  = a_rate; //サンプリングレート
-	tmpWavFmt.wBitsPerSample  = 16;
-	tmpWavFmt.nBlockAlign     = tmpWavFmt.nChannels * tmpWavFmt.wBitsPerSample / 8;
-	tmpWavFmt.nAvgBytesPerSec = tmpWavFmt.nSamplesPerSec * tmpWavFmt.nBlockAlign;
-
 	tmpDesc.dwSize          = sizeof(DSBUFFERDESC);
-	tmpDesc.dwFlags         = __SBUF_FLAG;
-	tmpDesc.dwBufferBytes   = (float)tmpWavFmt.nAvgBytesPerSec * a_lengthSec;
-	tmpDesc.lpwfxFormat     = &tmpWavFmt;
+	tmpDesc.dwFlags         = SKRB_SBUF_FLAG;
+	tmpDesc.dwBufferBytes   = (float)m_wavfmtex.nAvgBytesPerSec * a_lengthSec;
+	tmpDesc.lpwfxFormat     = &m_wavfmtex;
 	tmpDesc.guid3DAlgorithm = DS3DALG_DEFAULT;
 	hr = g_pDSound->CreateSoundBuffer(&tmpDesc, &ptmpBuf, nullptr);
 	if (FAILED(hr) || nullptr == ptmpBuf) {
@@ -153,7 +148,8 @@ HRESULT Sound::load(LPCTSTR a_pSrcFile, DWORD a_loopStart, DWORD a_loopEnd)
 }
 
 HRESULT Sound::loadFromResourceFile(LPCTSTR a_pSrcFile,
-		DWORD a_size, DWORD a_offset, DWORD a_loopStart, DWORD a_loopEnd)
+		DWORD a_size, DWORD a_offset, DWORD a_loopStart, DWORD a_loopEnd,
+		DWORD a_late, WORD a_ch, WORD a_bps)
 {
 	m_hMmio = mmioOpen(const_cast<LPTSTR>(a_pSrcFile), &m_mmInfo, MMIO_READ);
 	//音声ファイル開く
@@ -173,15 +169,19 @@ HRESULT Sound::loadFromResourceFile(LPCTSTR a_pSrcFile,
 	}
 	mmioClose(m_hMmio, 0);
 
-	//曲の長さ(sec)を求めてバッファリング
-	DWORD smpRate = SystemParam::getDSPBufSamplingRate();
-	m_wavfmtex.nChannels      = 2;
-	m_wavfmtex.wBitsPerSample = 16;
-	m_wavfmtex.nSamplesPerSec = smpRate;
-	m_mmdatck.cksize          = a_size;
-	float length = m_mmdatck.cksize
-			/ ((m_wavfmtex.nChannels * m_wavfmtex.wBitsPerSample / 8.0f)
-				* m_wavfmtex.nSamplesPerSec) + 1.0f;
+	//フォーマットの設定バッファリング
+	DWORD smpRate = a_late + // 0 が渡されたらプライマリバッファと同じにする
+			(a_late == ((DWORD)0)) * SystemParam::getDSPBufSamplingRate();
+	m_wavfmtex.wFormatTag      = 1;
+	m_wavfmtex.nChannels       = a_ch;
+	m_wavfmtex.wBitsPerSample  = a_bps;
+	m_wavfmtex.nSamplesPerSec  = smpRate;
+	m_wavfmtex.nBlockAlign     = m_wavfmtex.nChannels * 2;
+	m_wavfmtex.nAvgBytesPerSec = m_wavfmtex.nSamplesPerSec * m_wavfmtex.nBlockAlign;
+	m_mmdatck.cksize           = a_size;
+	//バッファリング
+	float length = (float)m_mmdatck.cksize /
+		           (float)m_wavfmtex.nAvgBytesPerSec;
 	if (FAILED(dSoundCreateSecondaryBuffer(smpRate, length)) ||
 		FAILED(dSoundLockBuf()))
 	{
@@ -194,10 +194,10 @@ HRESULT Sound::loadFromResourceFile(LPCTSTR a_pSrcFile,
 	m_isPlayable = true;
 
 	return S_OK;
-}
+};
 
-HRESULT Sound::loadFromMemory(const BYTE a_data[],
-		DWORD a_size, DWORD a_offset, DWORD a_loopStart, DWORD a_loopEnd)
+HRESULT Sound::loadFromMemory(const BYTE a_data[], DWORD a_size, DWORD a_offset,
+		DWORD a_loopStart, DWORD a_loopEnd, DWORD a_late, WORD a_ch, WORD a_bps)
 {
 	if (nullptr == a_data) {
 		Message(_T("空の音声データを渡されました"), _T("Error"));
@@ -205,23 +205,22 @@ HRESULT Sound::loadFromMemory(const BYTE a_data[],
 	}
 
 	//音声データ格納
-	DWORD dataSize = (sizeof(a_data) + a_offset);
-	if (dataSize < a_size) { //十分なサイズが無い
-		Message(_T("音声データのサイズが足りません"), _T("Error"));
-		return E_FAIL;
-	}
 	m_pData = new BYTE[a_size];
 	memcpy(m_pData, a_data + a_offset, a_size);
 
-	//曲の長さ(sec)を求めてバッファリング
-	DWORD smpRate = SystemParam::getDSPBufSamplingRate();
-	m_wavfmtex.nChannels = 2;
-	m_wavfmtex.wBitsPerSample = 16;
-	m_wavfmtex.nSamplesPerSec = smpRate;
-	m_mmdatck.cksize          = a_size;
-	float length = m_mmdatck.cksize
-			/ ((m_wavfmtex.nChannels * m_wavfmtex.wBitsPerSample / 8.0f)
-				* m_wavfmtex.nSamplesPerSec) + 1.0f;
+	//フォーマットの設定バッファリング
+	DWORD smpRate = a_late + // 0 が渡されたらプライマリバッファと同じにする
+			(a_late == ((DWORD)0)) * SystemParam::getDSPBufSamplingRate();
+	m_wavfmtex.wFormatTag      = 1;
+	m_wavfmtex.nChannels       = a_ch;
+	m_wavfmtex.wBitsPerSample  = a_bps;
+	m_wavfmtex.nSamplesPerSec  = smpRate;
+	m_wavfmtex.nBlockAlign     = m_wavfmtex.nChannels * 2;
+	m_wavfmtex.nAvgBytesPerSec = m_wavfmtex.nSamplesPerSec * m_wavfmtex.nBlockAlign;
+	m_mmdatck.cksize           = a_size;
+	//バッファリング
+	float length = (float)m_mmdatck.cksize /
+		           (float)m_wavfmtex.nAvgBytesPerSec;
 	if (FAILED(dSoundCreateSecondaryBuffer(smpRate, length)) ||
 		FAILED(dSoundLockBuf()))
 	{
@@ -394,8 +393,8 @@ Sound::~Sound() {
 
 
 
-#undef __PBUF_FLAG
-#undef __SBUF_FLAG
+#undef SKRB_PBUF_FLAG
+#undef SKRB_SBUF_FLAG
 
 
 

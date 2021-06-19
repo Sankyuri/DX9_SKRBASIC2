@@ -1,25 +1,25 @@
 ﻿#include "GameMain.h"
 
 
-void GameMain::init() {
+HRESULT GameMain::init() {
 
 	// ゲーム初期化処理
 
-
+	return S_OK; // 処理が正常に終了したら S_OK を返すこと。
 }
 
-void GameMain::main() {
+HRESULT GameMain::main() {
 
 	// メインループ処理
 
-
+	return S_OK;
 }
 
-void GameMain::bgmLoop() {
+HRESULT GameMain::bgmLoop() {
 
 	// BGM のループチェック
-
-
+	
+	return S_OK;
 }
 
 

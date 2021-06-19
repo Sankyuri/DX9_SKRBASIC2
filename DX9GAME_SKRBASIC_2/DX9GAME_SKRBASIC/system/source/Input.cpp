@@ -293,8 +293,8 @@ bool Input::isJoypadPush(JoypadInput a_button) {
 	};
 
 	if (m_useJoypad) {
-		//方向キー
-		if (static_cast<int>(JoypadInput::BUTTON32) < button) {
+		//ボタン
+		if (a_button <= JoypadInput::BUTTON32) {
 			//入力している
 			if (m_joystate.rgbButtons[button] & BUTTON_ON_FLUG) {
 				if (not m_wasJoyIn[button]) {
@@ -306,7 +306,7 @@ bool Input::isJoypadPush(JoypadInput a_button) {
 				m_wasJoyIn[button] = false;
 			}
 		}
-		//ボタン
+		//方向キー
 		else {
 			if (abs(m_joystate.lX) > PAD_POS_MIN ||
 				abs(m_joystate.lY) > PAD_POS_MIN)
@@ -332,7 +332,7 @@ bool Input::isJoypadPush(JoypadInput a_button) {
 			else { //入力していない
 				m_wasJoyIn[button] = false;
 			}
-		} // if (button < static_cast<int>(JoypadInput::UP)) { ... } else
+		} // if (a_button <= JoypadInput::BUTTON32) { ... } else
 	}
 	return false;
 }
